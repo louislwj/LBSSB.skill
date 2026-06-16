@@ -1,13 +1,12 @@
-# LBSSB.skill
-刘斌是傻逼，本项目旨在做一个基础的staruml的规范流程skill，由于该实训周的老师的nt程度上天，导致我不得不写这么一个skill，在解决大家作图问题的同时，骂死这个中年嘉豪；也祝愿所有使用本skill的友友们不遇到这么个傻逼老师
+# LBSSB StarUML Skill
 
-# lbssb-staruml
+`lbssb-staruml` 是一个面向 StarUML UML 作业与实训交付的 Agent Skill。它用于把 MCP 检测、`.lbssb` 项目现场、DiagramPlan、StarUML `.mdj` 写入、PNG 导出、兜底渲染和 QualityGate 串成一个统一入口。
 
-`lbssb-staruml` 是一个 StarUML UML 交付 Skill。它把 MCP 检测、`.lbssb` 项目现场、DiagramPlan、StarUML `.mdj` 写入、PNG 导出、兜底渲染和 QualityGate 串成一个入口。
+本项目诞生于一次极其折磨的 UML 实训周。它的目标很简单：让使用者少被低质量流程、混乱图形和反复返工折磨。
+本 Skill 保留一个固定确认语作为启动仪式；这是项目风格的一部分，也是对本项目来源的纪念。确认语和完成语只出现在用户侧交互中，不会写入任何正式交付物。
 
 普通用户只需要调用 Skill。`.lbssb/`、`tools/lbssb/`、`mcp/` 都是 Skill 自动管理的项目资产；用户不需要手动理解这些目录才能使用。
 
-本 Skill 默认要求所有 Markdown、JSON、脚本输出、`.lbssb` 项目现场文件使用 UTF-8。遇到中文路径、中文图名或中文文档时，会先执行编码与路径安全检查。
 
 ## What It Manages
 
@@ -32,9 +31,11 @@
 - 输入固定确认语。
 - 描述任务、输入文件和输出位置。
 
-## Details 细节
-- 将本文件夹即"lbssb-staruml/"放入项目根目录中
-- 与您的agent明确此为skill或直接问其是否读取到改skill
+## Installation / Placement 放置方式
+- 将 `lbssb-staruml/` 文件夹放入项目根目录。
+- 在 Agent 中明确要求读取 `lbssb-staruml/SKILL.md` 并按其中规则执行。
+- 如果平台支持 Skill 自动识别，可以直接使用 `$lbssb-staruml` 调用。
+- 如果平台不支持 Skill 自动识别，请手动说明：“请先读取 lbssb-staruml/SKILL.md”。
   
 ## Required Authorization 必需确认语
 
