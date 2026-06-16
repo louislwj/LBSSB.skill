@@ -28,8 +28,13 @@ Before executing any route, verify these package files exist:
 - `scripts-spec.md`
 - `token-control.md`
 - `encoding-policy.md`
+- `tool-specs/mcp-readme.spec.md`
+- `tool-specs/mcp-config-examples.spec.md`
+- `tool-specs/validate-staruml-mcp.spec.md`
 
 If any required file is missing, mark `Skill Package Unverified: <missing files>` and do not pretend the full Skill workflow is available. Only report the missing package files and ask for repair or repair the Skill package if authorized.
+
+If any MCP bootstrap spec is missing, mark `Skill Package Unverified: missing MCP bootstrap spec`.
 
 ## Authorization Phrase
 

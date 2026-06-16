@@ -32,6 +32,13 @@
 8. If PNG is dark/low contrast, go directly to `normalize_png_background.py` or `draw_from_plan.py`.
 9. Output compact status by default.
 
+## MCP Token Control
+
+- MCP install and environment debugging are high-token operations; run them only in `environment` route or when production work is blocked.
+- Normal production tasks must not repeatedly explain MCP installation.
+- If MCP is already verified, later tasks should read only `mcp/validate-staruml-mcp.md` and `.lbssb/toolchain.md`, then continue.
+- Do not rescan `mcp/node_modules/`; rely on validation records and capability checks.
+
 ## Compact Final Shape
 
 ```text

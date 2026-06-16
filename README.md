@@ -7,6 +7,7 @@
 
 普通用户只需要调用 Skill。`.lbssb/`、`tools/lbssb/`、`mcp/` 都是 Skill 自动管理的项目资产；用户不需要手动理解这些目录才能使用。
 
+本 Skill 默认要求所有 Markdown、JSON、脚本输出、`.lbssb` 项目现场文件使用 UTF-8。遇到中文路径、中文图名或中文文档时，会先执行编码与路径安全检查。
 
 ## What It Manages
 
@@ -96,6 +97,9 @@ quality-gates.md
 scripts-spec.md
 token-control.md
 encoding-policy.md
+tool-specs/mcp-readme.spec.md
+tool-specs/mcp-config-examples.spec.md
+tool-specs/validate-staruml-mcp.spec.md
 ```
 
 如果缺失，状态为 `Skill Package Unverified`，不会伪装成完整执行。
@@ -120,6 +124,24 @@ encoding-policy.md
 - `mcp/validate-staruml-mcp.md`
 
 安装或注册后必须验证读取、写入、保存副本和导出 PNG；失败则标记 `MCP Unverified`。
+
+## StarUML MCP Quick Setup
+
+完整 MCP 闭环需要三部分：
+
+1. `staruml_official`：读取、图清单、导出。
+2. `staruml_third_party`：打开、创建、修改、保存。
+3. `staruml-mcp-extension`：安装在 StarUML 内部，提供 `58322` 增强接口。
+
+推荐项目内路径：
+
+```text
+project/mcp/
+```
+
+用户不需要一开始手动理解这些目录；当 Skill 检测到 MCP 缺失时，会提示授权创建 `mcp/` 并生成安装说明、配置示例和验证清单。
+
+未授权时，本 Skill 不会安装依赖、下载扩展或修改 IDE 配置。
 
 ## Encoding And Paths
 
