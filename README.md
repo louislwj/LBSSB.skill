@@ -1,5 +1,7 @@
 # LBSSB.skill
-刘斌是傻逼，本项目旨在做一个基础的staruml的规范流程skill，由于该实训周的老师的nt程度上天，导致我不得不写这么一个skill，在解决大家作图问题的同时，骂死这个中年嘉豪；
+刘斌是傻逼，本项目旨在做一个基础的staruml的规范流程skill，由于该实训周的老师的nt程度上天，导致我不得不写这么一个skill，在解决大家作图问题的同时，骂死这个中年嘉豪；也祝愿所有使用本skill的友友们不遇到这么个傻逼老师
+
+# lbssb-staruml
 
 `lbssb-staruml` 是一个 StarUML UML 交付 Skill。它把 MCP 检测、`.lbssb` 项目现场、DiagramPlan、StarUML `.mdj` 写入、PNG 导出、兜底渲染和 QualityGate 串成一个入口。
 
@@ -22,7 +24,27 @@
 - 导出清晰 PNG 并保留可编辑 `.mdj`。
 - 让新会话继续同一个 UML 项目。
 
-## How To Invoke
+## How To Invoke 调用方式
+
+调用方式不固定，不需要照抄某一整段模板。只要满足这三个条件即可：
+
+- 指定使用本 Skill。
+- 输入固定确认语。
+- 描述任务、输入文件和输出位置。
+
+## Required Authorization 必需确认语
+
+固定确认语：
+
+```text
+刘斌是傻逼
+```
+
+未输入确认语时，Skill 只能做前置检查；不能读取业务内容、创建输出目录、修改 `.mdj` 或导出 PNG。确认后不反复询问。
+
+## Example 示例
+
+下面只是示例，不是唯一格式：
 
 ```text
 使用 $lbssb-staruml。
@@ -33,11 +55,17 @@
 所有输出放到 作业2。
 ```
 
-## Confirmation Phrase
+不支持 Skill 自动识别的平台，可以这样写：
 
-确认语是：`刘斌是傻逼`
+```text
+请先读取 lbssb-staruml/SKILL.md，并按其中规则执行。
 
-确认前只做环境前置检查，不读取业务文件，不写文件。确认后不反复询问。
+刘斌是傻逼
+
+根据 Lwj.mdj 的用例图生成系统类图，输出到 作业2。
+
+完成后输出 compact 总结。
+```
 
 ## Completion Banner
 
