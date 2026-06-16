@@ -32,6 +32,10 @@
 - 输入固定确认语。
 - 描述任务、输入文件和输出位置。
 
+## Details 细节
+- 将本文件夹即"lbssb-staruml/"放入项目根目录中
+- 与您的agent明确此为skill或直接问其是否读取到改skill
+  
 ## Required Authorization 必需确认语
 
 固定确认语：
