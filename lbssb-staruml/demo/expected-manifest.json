@@ -1,0 +1,23 @@
+{
+  "backend": "staruml-mcp",
+  "capabilityLevel": "L4",
+  "starumlExecutable": "C:/Program Files/StarUML/StarUML.exe",
+  "preflightStatus": "Verified",
+  "diagramCountExpected": 1,
+  "diagramCountActual": 1,
+  "exportedPngCount": 1,
+  "nativeMdjVerified": true,
+  "fallbackUsed": false,
+  "status": "Verified",
+  "mdj": "output/demo.mdj",
+  "diagrams": [
+    {
+      "file": "output/01_class.png",
+      "diagramTitle": "System Class Diagram",
+      "type": "class",
+      "source": "staruml-export",
+      "mdjDiagram": "System Class Diagram",
+      "consistency": "native"
+    }
+  ]
+}

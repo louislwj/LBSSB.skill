@@ -1,0 +1,31 @@
+# Dependencies and generated caches
+node_modules/
+__pycache__/
+*.pyc
+
+# Project-local StarUML/MCP runtime payloads
+mcp/node_modules/
+mcp/StarUML/
+tools/StarUML/
+.lbssb/runtime/StarUML/
+lbssb-staruml/runtime/StarUML/
+
+# Local project state and reports
+.lbssb/
+!.lbssb/*.template.md
+.lbssb-test/
+*.log
+*.tmp
+
+# User UML projects and generated binaries
+*.mdj
+*.png
+*.docx
+*.pdf
+
+# Keep skill examples and specs explicit
+!lbssb-staruml/demo/*.json
+!lbssb-staruml/demo/*.md
+!lbssb-staruml/templates/*.json
+!lbssb-staruml/tests/fixtures/*.json
+!lbssb-staruml/tests/fixtures/*.mdj

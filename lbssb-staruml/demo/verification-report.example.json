@@ -1,0 +1,12 @@
+{
+  "status": "Verified",
+  "manifest": ".lbssb/diagram-manifest.json",
+  "preflight": ".lbssb/preflight-report.json",
+  "capabilityLevel": "L4",
+  "preflightStatus": "Verified",
+  "nativeMdjVerified": true,
+  "fallbackUsed": false,
+  "backend": "staruml-mcp",
+  "errors": [],
+  "warnings": []
+}

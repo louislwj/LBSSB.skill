@@ -29,6 +29,11 @@ Scripts are internal Skill tool caches, not prerequisites the user must understa
 | `normalize_png_background.py` | Convert unreadable dark/transparent export to white background | PNG dir | normalized PNG | thresholds, root dir |
 | `verify_deliverables.py` | Check `.mdj`, PNGs, manifest, image dimensions | output dir, expected plan | report JSON/text | expected counts, min size |
 | `inspect_class_associations.mjs` | Inspect class relations, multiplicities, and crossings hints | project or diagram ID | console/JSON report | diagram name/ID |
+| `tools/start_project_staruml.ps1` | Resolve and start project/system StarUML safely | project root, optional runtime config | JSON startup result | ports, wait seconds |
+| `tools/check_staruml_preflight.py` | Hard preflight and capability level report | project root, optional evidence | `.lbssb/preflight-report.json` | evidence file, MCP tools JSON |
+| `tools/check_staruml_preflight.ps1` | Windows wrapper for Python preflight | same as Python script | `.lbssb/preflight-report.json` | Python executable |
+| `tools/validate_manifest.py` | Manifest schema and consistency checks | manifest path | console JSON | expected diagram count |
+| `tools/verify_deliverables.py` | Final hard deliverable verification | manifest, preflight, mdj | `.lbssb/verification-report.json` | expected diagram count |
 
 ## PlantUML Fallback Scripts
 
@@ -38,16 +43,72 @@ Allowed outputs:
 
 - `.puml`
 - PNG rendered from `.puml`
-- README/report documentation
+- `.docx` or `.md` documentation
 - manifest with `deliveryBackend: plantuml-fallback`
+- `fallback-report.json`
 
 Forbidden:
 
 - Do not create or claim editable StarUML `.mdj`.
 - Do not mark fallback PNG as `native`.
 - Do not silently replace a requested StarUML delivery with PlantUML output.
+- Do not set `final_status`, `finalStatus`, or a QualityGate summary to `Verified` for editable StarUML delivery when the backend is fallback/script-only.
+- Do not claim `MCP write success`.
+- Do not claim `StarUML native delivery complete`.
 
 If fallback is used, final status must be `Unverified: StarUML native delivery unavailable; provided PlantUML fallback` unless the user's requested deliverable was explicitly PlantUML.
+
+If fallback emits any `.mdj` skeleton or JSON-like project file, it must be marked:
+
+```text
+experimental
+unverified
+not StarUML-native-authored
+not accepted as editable delivery
+```
+
+It becomes accepted native delivery only after StarUML MCP/API opens it, saves a copy, exports PNG, and `tools/verify_deliverables.py` exits `0`.
+
+## Forbidden MDJ Script Patterns
+
+Scripts must not create native `.mdj` deliverables by direct file synthesis.
+
+Reject a script as a native StarUML authoring path if it contains:
+
+```text
+zipfile.ZipFile
+writestr('project.json'
+writestr("project.json"
+"_type": "Project"
+Path(...).write_text
+Path(...).write_bytes
+fs.writeFile
+fs.writeFileSync
+```
+
+Allowed use:
+
+- read-only inspection of existing `.mdj`;
+- creating fallback `.puml`, PNG, README, or manifest;
+- calling verified StarUML MCP/API endpoints that create/save real StarUML objects.
+
+If such a script still writes a `.mdj`, mark the delivery `Failed: invalid native StarUML authoring path`.
+
+## Static Scan Gate
+
+Before final acceptance, scan generated scripts and manifests for contradiction patterns:
+
+```text
+final_status = "Verified"
+"finalStatus": "Verified"
+"QualityGate": "Verified"
+"backend": "script fallback"
+"deliveryBackend": "plantuml-fallback"
+"StarUML MCP not available"
+"StarUML GUI not available"
+```
+
+If unavailable-StarUML or fallback markers appear together with native `Verified`, fail the gate.
 
 ## Current Project Reusable Assets
 

@@ -10,9 +10,18 @@ Required status for native StarUML delivery:
 
 ```text
 StarUML delivery preflight: Verified
+Capability level: L4
 ```
 
 If preflight fails, stop native `.mdj` work. Route only to PlantUML fallback or read-only analysis, and do not claim editable StarUML output.
+
+Rerun preflight after any environment change, including:
+
+- user says sandbox/security restrictions were changed;
+- StarUML was manually started or restarted;
+- `NODE_OPTIONS` was changed;
+- MCP/extension was installed, reloaded, or port availability changed;
+- the agent switches from fallback back to native `.mdj` work.
 
 ## Steps
 
@@ -51,6 +60,7 @@ If preflight fails, stop native `.mdj` work. Route only to PlantUML fallback or 
    - Tool: MCP create/update tools.
    - Output: native StarUML diagrams.
    - Success: diagrams exist, are editable, and contain real views/relationships.
+   - Constraint: Model, Diagram, View, and Relationship objects must be created or updated through StarUML MCP/API, not by direct JSON authoring.
 
 7. Save working copy.
    - Input: current StarUML project.
@@ -84,9 +94,9 @@ If preflight fails, stop native `.mdj` work. Route only to PlantUML fallback or 
 
 12. Final auto verification.
     - Input: working `.mdj`, guide requirements, exported PNGs, manifest.
-    - Tool: StarUML MCP/API, verification script if needed.
-    - Output: manifest with validation result.
-    - Success: StarUML opens the `.mdj`; diagram count matches requirements; every diagram has major elements and relationships/edges where expected; every diagram exports PNG.
+    - Tool: StarUML MCP/API plus `tools/verify_deliverables.py`.
+    - Output: `.lbssb/verification-report.json`.
+    - Success: StarUML opens the `.mdj`; diagram count matches requirements; every diagram has major elements and relationships/edges where expected; every diagram exports PNG; verification script exits `0`.
 
 ## Forbidden
 
@@ -96,6 +106,10 @@ If preflight fails, stop native `.mdj` work. Route only to PlantUML fallback or 
 - Claiming completion when export or QualityGate fails.
 - Replacing native `.mdj` quality claims with redraw-only PNG evidence.
 - Directly constructing `.mdj` JSON and claiming it was generated through StarUML.
+- Packaging `project.json` into a ZIP and naming it `.mdj`.
+- Claiming a manual double-click will open the generated `.mdj` unless StarUML has already opened that exact file successfully.
+- Reporting `QualityGate: Verified` when the report also says StarUML GUI/MCP/API is unavailable.
+- Reporting `Verified` when `.lbssb/preflight-report.json` or `.lbssb/verification-report.json` is missing.
 - Silent fallback from native `.mdj` delivery to image-only delivery.
 
 ## PlantUML Fallback
@@ -106,14 +120,17 @@ Allowed outputs:
 
 - `.puml`
 - PNG rendered from `.puml`
-- README/report documentation
+- `.docx` or `.md` documentation
 - manifest that states `deliveryBackend: plantuml-fallback`
+- `fallback-report.json`
 
 Forbidden claims:
 
 - Do not say an editable StarUML `.mdj` was generated.
 - Do not mark fallback PNG as `native`.
 - Do not use PlantUML success to satisfy StarUML `.mdj` QualityGate.
+- Do not claim MCP write success.
+- If an experimental `.mdj` skeleton or JSON file is emitted, mark it `experimental`, `unverified`, `not StarUML-native-authored`, and `not accepted as editable delivery` unless it passed StarUML MCP/API open, save, and export verification.
 
 ## MDJ / PNG Consistency
 

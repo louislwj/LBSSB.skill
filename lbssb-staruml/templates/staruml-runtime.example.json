@@ -1,0 +1,8 @@
+{
+  "starumlExecutable": "C:/Program Files/StarUML/StarUML.exe",
+  "apiServerPort": 58321,
+  "extensionPort": 58322,
+  "preferProjectLocalStarUML": true,
+  "clearNodeOptionsForStarUMLLaunch": true,
+  "enableLogging": true
+}

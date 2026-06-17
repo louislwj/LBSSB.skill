@@ -1,0 +1,13 @@
+{
+  "backend": "plantuml-fallback",
+  "capabilityLevel": "L0",
+  "starumlExecutable": "",
+  "preflightStatus": "Unverified: capability L0",
+  "diagramCountExpected": 0,
+  "diagramCountActual": 0,
+  "exportedPngCount": 0,
+  "nativeMdjVerified": false,
+  "fallbackUsed": true,
+  "status": "Unverified",
+  "diagrams": []
+}

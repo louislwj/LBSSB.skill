@@ -1,0 +1,20 @@
+{
+  "status": "Verified",
+  "capabilityLevel": "L4",
+  "starumlExecutable": "C:/Program Files/StarUML/StarUML.exe",
+  "resolvedFrom": "system",
+  "starumlExecutableResolved": true,
+  "starumlLaunchable": true,
+  "nodeOptionsDetected": false,
+  "nodeOptionsUseSystemCa": false,
+  "starumlProcessExists": true,
+  "apiServer58321": true,
+  "extension58322": true,
+  "mcpReadCapability": true,
+  "mcpWriteCapability": true,
+  "mcpExportPngCapability": true,
+  "saveCopyCapability": true,
+  "minimalTestMdjCreated": true,
+  "testMdjOpened": true,
+  "testPngExported": true
+}

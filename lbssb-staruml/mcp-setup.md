@@ -4,6 +4,56 @@
 
 Define how to detect, suggest, register, validate, and degrade StarUML MCP capabilities. Do not install or modify user IDE configuration without explicit authorization.
 
+This repository is the `lbssb-staruml` Skill package, not StarUML, not a StarUML MCP implementation, and not a redistributor of StarUML binaries.
+
+## Project-level StarUML Runtime
+
+Project-level StarUML support means path resolution and launch support only. Do not commit StarUML installers, portable binaries, user logs, user `.mdj` files, or private local paths to the repository.
+
+StarUML executable lookup priority:
+
+1. Project runtime config:
+   - `.lbssb/staruml-runtime.json`
+   - `lbssb-staruml/runtime/staruml-runtime.json`
+2. Environment variable:
+   - `LBSSB_STARUML_EXE`
+3. Project-local portable paths, if the user placed StarUML there:
+   - `tools/StarUML/StarUML.exe`
+   - `.lbssb/runtime/StarUML/StarUML.exe`
+   - `mcp/StarUML/StarUML.exe`
+4. Common system install paths:
+   - `C:\Program Files\StarUML\StarUML.exe`
+   - `C:\Program Files (x86)\StarUML\StarUML.exe`
+5. `StarUML.exe` found on `PATH`.
+
+Template:
+
+```text
+lbssb-staruml/templates/staruml-runtime.example.json
+```
+
+Copy it to `.lbssb/staruml-runtime.json` in a project when a project-specific StarUML path is needed. If a project-local StarUML executable is used, the user must place it there themselves.
+
+Startup helper:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File lbssb-staruml/tools/start_project_staruml.ps1
+```
+
+This helper resolves StarUML, reports the source, checks `NODE_OPTIONS`, clears risky process-local `NODE_OPTIONS` only for the StarUML launch, starts StarUML with optional `--enable-logging`, checks process existence, and checks ports `58321` and `58322`.
+
+## Delivery Capability Levels
+
+| Level | Requirements | Allowed work |
+|---|---|---|
+| `L0` | no StarUML | read-only analysis or PlantUML fallback |
+| `L1` | `StarUML.exe` resolved and launchable | startup diagnosis only |
+| `L2` | `58321` or reliable read capability | read project info, list diagrams, partial export |
+| `L3` | write MCP/API capability | edit working copy, but no verified delivery claim |
+| `L4` | write + save copy + export PNG + hard verification | `Verified` editable StarUML delivery allowed |
+
+If capability is below `L4`, do not claim `Verified` editable StarUML delivery.
+
 ## Capability Model
 
 Judge MCPs by capability, not by hard-coded server name.
@@ -179,6 +229,22 @@ StarUML delivery preflight:
 ```
 
 If any required step fails, stop native StarUML delivery immediately. Use only PlantUML fallback or read-only analysis, and label the final status honestly.
+
+If the user later says sandbox/security restrictions were lifted, StarUML was opened manually, `NODE_OPTIONS` was changed, or MCP was installed, rerun the full preflight. Do not resume native `.mdj` work from a previous failed preflight.
+
+Hard preflight command:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File lbssb-staruml/tools/check_staruml_preflight.ps1
+```
+
+Expected report:
+
+```text
+.lbssb/preflight-report.json
+```
+
+The command must return non-zero when capability is below `L4`. Text-only judgment is not enough for `Verified`.
 
 ## Preflight Before Confirmation Phrase
 
@@ -417,6 +483,8 @@ Native StarUML delivery requires real StarUML object creation:
 
 Do not directly concatenate, hand-patch, or synthesize `.mdj` JSON and call it a StarUML-generated project. Direct JSON inspection is allowed for read-only diagnosis only.
 
+Do not create `.mdj` by writing a ZIP archive that contains `project.json`. For this Skill, an accepted generated `.mdj` must be saved by StarUML MCP/API and must open/export after generation.
+
 ## Common Failures
 
 - StarUML is not running.
@@ -434,6 +502,22 @@ Electron main process error handling:
 - First inspect `NODE_OPTIONS`.
 - If `NODE_OPTIONS` contains `--use-system-ca` or other Electron-incompatible flags, ask the user to clear or adjust it and restart StarUML.
 - Do not attribute this failure to antivirus/security software unless there is separate evidence.
+
+Specific observed Electron failure:
+
+```text
+A JavaScript error occurred in the main process
+TypeError: Error processing argument at index 1
+conversion failure from undefined
+at Object.showErrorBox
+```
+
+Interpretation:
+
+- This is usually a secondary crash in StarUML/Electron's error dialog handler after an earlier main-process startup error.
+- Do not immediately conclude the target `.mdj` is corrupt.
+- First check `NODE_OPTIONS`, especially `--use-system-ca`, the StarUML launch environment, and StarUML user configuration.
+- Treat the target `.mdj` as a high-probability cause only when StarUML starts cleanly with no project and then crashes when opening that specific `.mdj`.
 
 ## New Project Check
 
