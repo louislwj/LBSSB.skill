@@ -2,6 +2,18 @@
 
 Use this flow for editable `.mdj` work.
 
+## Mandatory Preflight
+
+Before step 1, run the delivery preflight from `mcp-setup.md`.
+
+Required status for native StarUML delivery:
+
+```text
+StarUML delivery preflight: Verified
+```
+
+If preflight fails, stop native `.mdj` work. Route only to PlantUML fallback or read-only analysis, and do not claim editable StarUML output.
+
 ## Steps
 
 1. Locate source `.mdj`.
@@ -24,9 +36,9 @@ Use this flow for editable `.mdj` work.
 
 4. Modify only the working copy.
    - Input: working `.mdj`.
-   - Tool: edit/write MCP or API fallback.
+   - Tool: edit/write MCP or verified StarUML API/extension fallback.
    - Output: updated working model.
-   - Success: source path is not touched.
+   - Success: source path is not touched; Model, Diagram, View, and Relationship objects are created by StarUML MCP/API, not direct JSON patching.
 
 5. Read diagram list.
    - Input: working project.
@@ -38,7 +50,7 @@ Use this flow for editable `.mdj` work.
    - Input: DiagramPlan and LayoutSpec.
    - Tool: MCP create/update tools.
    - Output: native StarUML diagrams.
-   - Success: diagrams exist and are editable.
+   - Success: diagrams exist, are editable, and contain real views/relationships.
 
 7. Save working copy.
    - Input: current StarUML project.
@@ -70,6 +82,12 @@ Use this flow for editable `.mdj` work.
     - Output: continuation note.
     - Success: new session can continue without chat history.
 
+12. Final auto verification.
+    - Input: working `.mdj`, guide requirements, exported PNGs, manifest.
+    - Tool: StarUML MCP/API, verification script if needed.
+    - Output: manifest with validation result.
+    - Success: StarUML opens the `.mdj`; diagram count matches requirements; every diagram has major elements and relationships/edges where expected; every diagram exports PNG.
+
 ## Forbidden
 
 - Directly editing the original `.mdj`.
@@ -77,6 +95,25 @@ Use this flow for editable `.mdj` work.
 - Saving only `.mdj` with no PNG when screenshots are requested.
 - Claiming completion when export or QualityGate fails.
 - Replacing native `.mdj` quality claims with redraw-only PNG evidence.
+- Directly constructing `.mdj` JSON and claiming it was generated through StarUML.
+- Silent fallback from native `.mdj` delivery to image-only delivery.
+
+## PlantUML Fallback
+
+Use this only when StarUML/MCP preflight fails or the user explicitly asks for PlantUML.
+
+Allowed outputs:
+
+- `.puml`
+- PNG rendered from `.puml`
+- README/report documentation
+- manifest that states `deliveryBackend: plantuml-fallback`
+
+Forbidden claims:
+
+- Do not say an editable StarUML `.mdj` was generated.
+- Do not mark fallback PNG as `native`.
+- Do not use PlantUML success to satisfy StarUML `.mdj` QualityGate.
 
 ## MDJ / PNG Consistency
 

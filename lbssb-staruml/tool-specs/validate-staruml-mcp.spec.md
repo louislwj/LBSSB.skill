@@ -19,6 +19,19 @@ Ports:
 netstat -ano | Select-String -Pattern ":58321|:58322|:58323"
 ```
 
+Node/Electron environment:
+
+```powershell
+Get-ChildItem Env:NODE_OPTIONS
+```
+
+Requirement:
+
+```text
+If StarUML reports Electron main process error, inspect NODE_OPTIONS first.
+If NODE_OPTIONS contains --use-system-ca or other incompatible flags, ask the user to clear/correct it and restart StarUML.
+```
+
 Project-local MCP files:
 
 ```powershell
@@ -55,12 +68,16 @@ does staruml_third_party have open_project / save_project_as?
 
 Validate only on a working copy:
 
-1. Open or read the target `.mdj`.
-2. Read project basic info.
-3. Read diagram list.
-4. Export or fetch one PNG.
-5. Save one copy to the output directory.
-6. Re-read the copied project's diagram list.
+1. Confirm `StarUML.exe` is installed and launchable.
+2. Create a minimum test `.mdj` in a temp/output directory.
+3. Open the test `.mdj` in StarUML.
+4. Create/read a tiny test model and diagram through MCP/API.
+5. Export or fetch one test PNG.
+6. Open or read the target `.mdj`.
+7. Read project basic info.
+8. Read diagram list.
+9. Save one copy to the output directory.
+10. Re-read the copied project's diagram list.
 
 Success:
 

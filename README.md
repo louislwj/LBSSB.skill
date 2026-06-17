@@ -117,6 +117,10 @@ tool-specs/validate-staruml-mcp.spec.md
 
 不会未经授权安装 MCP、运行 `npm install`、修改 IDE 配置或覆盖真实配置。
 
+StarUML `.mdj` 交付必须先通过 preflight：StarUML 可启动、`NODE_OPTIONS` 已检查、`58321/58322` 可连接、测试 `.mdj` 可打开、测试图可导出 PNG。未通过时不能声称完成可编辑 StarUML 工程。
+
+如果 StarUML 启动出现 Electron main process error，优先检查并清理 `NODE_OPTIONS`，尤其是 `--use-system-ca`，不要默认归因于杀毒软件或安全软件。
+
 授权创建 `mcp/` 后，Skill 应生成：
 
 - `mcp/README.md`
@@ -173,6 +177,10 @@ PNG 一致性会标记为：
 - `unverified`：来源或语义一致性无法确认。
 
 如果 PNG 是重绘结果，不能声称原生 `.mdj` 图布局也已同样优化。
+
+## PlantUML Fallback
+
+当 StarUML/MCP 不可用时，只能进入 PlantUML fallback。fallback 交付物必须明确标注为 `.puml`、PNG 或文档，不得声称生成了可编辑 StarUML `.mdj`。
 
 ## Final Status
 

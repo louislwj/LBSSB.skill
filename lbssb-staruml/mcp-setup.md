@@ -140,6 +140,46 @@ Rules:
 3. If `58321` is unreachable, do not claim StarUML API is available.
 4. If multiple StarUML processes are running, ask the user to close extra instances to avoid API and Extension pointing at different projects.
 
+## Delivery Preflight Required
+
+Run this after authorization and before any production StarUML `.mdj` task.
+
+Required checks:
+
+1. Check `StarUML.exe` is installed and launchable.
+   - Locate it through PATH, Start Menu install path, or common install locations.
+   - If it cannot be found or launched, native `.mdj` delivery is `Failed` or must route to PlantUML fallback.
+2. Check `NODE_OPTIONS`.
+   - Inspect whether `NODE_OPTIONS` exists.
+   - Pay special attention to `--use-system-ca`.
+   - If StarUML reports an Electron main process error and `NODE_OPTIONS` contains risky flags, tell the user to clear or correct `NODE_OPTIONS`; do not blame antivirus or security software by default.
+3. Check MCP/API ports.
+   - Verify `58321` is connectable for StarUML API.
+   - Verify `58322` is connectable for `staruml-mcp-extension`.
+   - If either required port is unavailable, do not claim native `.mdj` delivery.
+4. Create a minimum test `.mdj`.
+   - Use a working temp/output directory, never the user's source project.
+   - Open it with StarUML through MCP/API.
+   - Confirm StarUML can read the project back.
+5. Export one test diagram screenshot through MCP/API.
+   - The test may be a tiny model with one diagram and one relationship.
+   - Success requires a non-empty PNG/image response.
+
+Compact preflight status:
+
+```text
+StarUML delivery preflight:
+- StarUML.exe launchable:
+- NODE_OPTIONS:
+- 58321:
+- 58322:
+- test mdj open:
+- test PNG export:
+- status: Verified | Failed: <reason>
+```
+
+If any required step fails, stop native StarUML delivery immediately. Use only PlantUML fallback or read-only analysis, and label the final status honestly.
+
 ## Preflight Before Confirmation Phrase
 
 Before the authorization phrase, only check:
@@ -274,11 +314,12 @@ If any mandatory step fails, mark `MCP Unverified` and choose a fallback path.
 ## Fallback Order
 
 1. Formal MCP.
-2. StarUML HTTP API on `58321`.
-3. `staruml-mcp-extension` on `58322`.
-4. Local Node/Python scripts.
-5. Computer Use / GUI.
-6. Read-only analysis.
+2. StarUML HTTP API on `58321` and `staruml-mcp-extension` on `58322`, only if StarUML preflight is verified.
+3. Local Node/Python scripts that call verified StarUML API/extension.
+4. PlantUML fallback when StarUML/MCP is unavailable.
+5. Read-only analysis.
+
+PlantUML fallback may create `.puml`, PNG, and documentation only. It must not claim editable StarUML `.mdj` output.
 
 ## IDE Registration Guidance
 
@@ -364,16 +405,35 @@ Unified rules:
 
 Do not pretend shell script fallback is MCP success. If script fallback is used, final status must state the backend is `script fallback`.
 
+## Native MDJ Authoring Rule
+
+Native StarUML delivery requires real StarUML object creation:
+
+- Model elements must be created through StarUML MCP/API.
+- Diagrams must be created through StarUML MCP/API.
+- Views must be created through StarUML MCP/API.
+- Relationships must be created through StarUML MCP/API.
+- Layout updates must be applied through StarUML MCP/API or verified extension endpoints.
+
+Do not directly concatenate, hand-patch, or synthesize `.mdj` JSON and call it a StarUML-generated project. Direct JSON inspection is allowed for read-only diagnosis only.
+
 ## Common Failures
 
 - StarUML is not running.
 - API server disabled in StarUML settings.
+- `NODE_OPTIONS` breaks Electron startup, especially inherited flags such as `--use-system-ca`.
 - Multiple StarUML processes point ports to different projects.
 - Port `58321` or `58322` is blocked.
 - MCP server exposes read tools but no write tools.
 - Extension is installed but not enabled.
 - Diagram IDs changed after regeneration.
 - Export succeeds but image theme is unreadable.
+
+Electron main process error handling:
+
+- First inspect `NODE_OPTIONS`.
+- If `NODE_OPTIONS` contains `--use-system-ca` or other Electron-incompatible flags, ask the user to clear or adjust it and restart StarUML.
+- Do not attribute this failure to antivirus/security software unless there is separate evidence.
 
 ## New Project Check
 

@@ -4,6 +4,8 @@
 
 Scripts are Skill-generated or Skill-reused low-token tools. They are not user prerequisites and do not replace StarUML MCP. Use them for deterministic export, fallback rendering, validation, and inspection.
 
+Scripts must not fake native StarUML success. If a script writes `.puml`, PNG, docs, or any non-StarUML artifact, the manifest and final summary must identify the backend honestly.
+
 ## Script Generation Conditions
 
 Generate or update `tools/lbssb/` only when at least one condition is true:
@@ -27,6 +29,25 @@ Scripts are internal Skill tool caches, not prerequisites the user must understa
 | `normalize_png_background.py` | Convert unreadable dark/transparent export to white background | PNG dir | normalized PNG | thresholds, root dir |
 | `verify_deliverables.py` | Check `.mdj`, PNGs, manifest, image dimensions | output dir, expected plan | report JSON/text | expected counts, min size |
 | `inspect_class_associations.mjs` | Inspect class relations, multiplicities, and crossings hints | project or diagram ID | console/JSON report | diagram name/ID |
+
+## PlantUML Fallback Scripts
+
+Generate PlantUML fallback only when StarUML/MCP preflight fails or the user explicitly asks for PlantUML.
+
+Allowed outputs:
+
+- `.puml`
+- PNG rendered from `.puml`
+- README/report documentation
+- manifest with `deliveryBackend: plantuml-fallback`
+
+Forbidden:
+
+- Do not create or claim editable StarUML `.mdj`.
+- Do not mark fallback PNG as `native`.
+- Do not silently replace a requested StarUML delivery with PlantUML output.
+
+If fallback is used, final status must be `Unverified: StarUML native delivery unavailable; provided PlantUML fallback` unless the user's requested deliverable was explicitly PlantUML.
 
 ## Current Project Reusable Assets
 
@@ -118,7 +139,7 @@ Every PNG record must include:
   "file": "",
   "diagramTitle": "",
   "type": "",
-  "source": "staruml-export | draw_from_plan | normalized",
+  "source": "staruml-export | draw_from_plan | normalized | plantuml-fallback",
   "mdjDiagram": "",
   "consistency": "native | semantic-consistent | unverified"
 }

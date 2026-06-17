@@ -4,6 +4,7 @@ The final status is `Verified` only when the required gates pass. If a gate cann
 
 ## Universal
 
+- StarUML delivery preflight passed when editable `.mdj` delivery is requested.
 - Required `.mdj` exists when editable delivery is requested.
 - Required PNGs exist and are non-empty.
 - Manifest exists and records every PNG.
@@ -11,6 +12,35 @@ The final status is `Verified` only when the required gates pass. If a gate cann
 - Diagram titles match required business scenarios.
 - Diagram type matches the business logic it claims to show.
 - No source `.mdj` is modified directly.
+- No silent fallback was used.
+
+## StarUML MDJ Delivery Gate
+
+Use this gate whenever the task promises editable StarUML output.
+
+- `StarUML.exe` was launchable.
+- `NODE_OPTIONS` was checked; Electron main process errors were diagnosed through `NODE_OPTIONS` first.
+- Ports `58321` and `58322` were connectable before production work.
+- A minimum test `.mdj` opened successfully in StarUML.
+- A test diagram screenshot exported successfully through MCP/API.
+- Production `.mdj` opens in StarUML.
+- Diagram count matches the guide/requirements.
+- Each diagram has its main expected elements.
+- Each structural/interaction diagram has at least one expected relationship, edge, or message.
+- Every required diagram can export PNG.
+- Manifest records validation result for each diagram.
+- Native objects were created through StarUML MCP/API, not direct `.mdj` JSON synthesis.
+
+If any item fails, final status is `Failed: <reason>` or `Unverified: <reason>`, not `Verified`.
+
+## PlantUML Fallback Gate
+
+Use this gate when StarUML/MCP is unavailable.
+
+- Outputs are labeled as `.puml`, PNG, and documentation only.
+- No editable StarUML `.mdj` claim is made.
+- Manifest records `deliveryBackend: plantuml-fallback`.
+- Final summary states that StarUML native delivery was not verified.
 
 ## Use Case Diagram
 
@@ -94,7 +124,7 @@ Each record must include:
   "file": "",
   "diagramTitle": "",
   "type": "",
-  "source": "staruml-export | draw_from_plan | normalized",
+  "source": "staruml-export | draw_from_plan | normalized | plantuml-fallback",
   "mdjDiagram": "",
   "consistency": "native | semantic-consistent | unverified"
 }
@@ -103,5 +133,6 @@ Each record must include:
 Compatibility rule:
 
 - `source` may record the export route: `staruml-export`, `draw_from_plan`, or `normalized`.
+- PlantUML fallback may record `source: plantuml-fallback` and must not use `consistency: native`.
 - A consistency/source label must also record one of: `native`, `normalized`, `semantic-consistent`, or `unverified`.
 - `draw_from_plan` output can be `semantic-consistent`; it is not proof that the native `.mdj` layout is equally optimized.
