@@ -25,6 +25,25 @@ If missing, create:
 
 Use `templates/*.template.md` as the initial content.
 
+## Project Directory Intake
+
+When the user gives a directory as the task input, scan that directory before drawing.
+
+Required scan targets:
+
+- `.mdj` files: source or previous working StarUML projects.
+- `.docx`, `.pdf`, `.md`, `.txt`: requirements, guide books, reports, or user notes.
+- image files: reference screenshots or previous exports.
+- `.lbssb/`: continuation context and previous status.
+- `tools/lbssb/`: reusable project scripts.
+- `output/` or named delivery folders: existing deliverables to repair or avoid overwriting.
+
+Record the result in `.lbssb/context.md` and `.lbssb/diagram-inventory.md`.
+
+If a source `.mdj` or previous output exists, this is a repair/continuation task by default, not a blank regeneration task.
+
+Do not replace source model vocabulary until `source-preservation.md` has been applied.
+
 ## File Roles
 
 | File | Role |
@@ -40,6 +59,19 @@ Use `templates/*.template.md` as the initial content.
 | `token-control.md` | What to read, what to skip, and low-token route. |
 | `replication-guide.md` | How to reuse the approach in a new project. |
 | `next-action.md` | Exact continuation instructions for the next session. |
+
+## Required Machine-Readable Records
+
+For full projects or repairs, also create or update:
+
+```text
+.lbssb/source-inventory.json
+.lbssb/diagram-plan.json
+.lbssb/layout-plan.json
+.lbssb/visual-review.json
+```
+
+`source-inventory.json` records preserved model terms. `diagram-plan.json` records UML semantics. `layout-plan.json` records zones, lanes, node sizes, and routing expectations. `visual-review.json` records which exported PNGs were inspected and why they passed or failed.
 
 ## Writing Rules
 

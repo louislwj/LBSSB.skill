@@ -8,6 +8,9 @@
   "exportedPngCount": 0,
   "nativeMdjVerified": false,
   "fallbackUsed": true,
+  "engineeringStatus": "Unverified: StarUML native delivery unavailable; provided PlantUML fallback",
+  "visualStatus": "Unverified: fallback output not native StarUML visual evidence",
+  "sourcePreservationStatus": "Unverified: no native source inventory",
   "status": "Unverified",
   "diagrams": []
 }

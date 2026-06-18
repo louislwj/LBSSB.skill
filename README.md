@@ -28,6 +28,7 @@
 - 修复 StarUML 图的语义、布局或导出问题。
 - 导出清晰 PNG 并保留可编辑 `.mdj`。
 - 让新会话继续同一个 UML 项目。
+- 接受一个项目目录作为输入，先读取其中 `.mdj`、指导书、截图、`.lbssb/` 和 `tools/lbssb/`，再判断是继续修复还是新建。
 
 ## How To Invoke 调用方式
 
@@ -301,7 +302,7 @@ QualityGate 失败时不得声称完成。
 4. 让 Skill 创建或读取 `.lbssb/`。
 5. 先读取图清单、业务对象和已有类/属性/操作。
 6. 生成 DiagramPlan 和 LayoutPlan。
-7. 先绘制或修复一张高风险图，导出 PNG 并复核。
+7. 先绘制或修复一张高风险图，导出 PNG 并复核；不允许未看首张图就批量扫完并声称完成。
 8. 复核通过后再批量生成或修复剩余图。
 9. 用 MCP 对原生 `.mdj` 做局部移动、缩放、改线，不用全局 auto-layout 充当最终修复。
 10. 导出 PNG，运行工程验收和视觉验收，并更新 `.lbssb/next-action.md`。
@@ -319,3 +320,13 @@ QualityGate 失败时不得声称完成。
 ```text
 Unverified: diagram quality gate failed
 ```
+
+manifest 根节点和每张图都必须记录：
+
+```text
+engineeringStatus
+visualStatus
+sourcePreservationStatus
+```
+
+缺少这些字段时，`verify_deliverables.py` 会拒绝 `Verified`。这能防止“图能导出但线乱、文字截断、源英文成员被覆盖”的交付被误报成功。

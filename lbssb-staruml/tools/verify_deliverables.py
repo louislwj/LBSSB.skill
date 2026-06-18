@@ -38,6 +38,22 @@ def root(manifest: Any) -> Dict[str, Any]:
     return manifest if isinstance(manifest, dict) else {}
 
 
+def diagram_records(manifest: Any) -> List[Dict[str, Any]]:
+    if isinstance(manifest, list):
+        return [item for item in manifest if isinstance(item, dict)]
+    if not isinstance(manifest, dict):
+        return []
+    for key in ("diagrams", "files", "images", "pngs"):
+        value = manifest.get(key)
+        if isinstance(value, list):
+            return [item for item in value if isinstance(item, dict)]
+    return []
+
+
+def is_verified(value: Any) -> bool:
+    return str(value) == "Verified"
+
+
 def check_mdj(path: Path, native_required: bool) -> Tuple[List[str], List[str]]:
     errors: List[str] = []
     warnings: List[str] = []
@@ -127,6 +143,10 @@ def main() -> int:
     native_verified = bool(manifest_root.get("nativeMdjVerified", False))
     backend = str(manifest_root.get("backend") or manifest_root.get("deliveryBackend") or "").lower()
     status_claim = str(manifest_root.get("status") or manifest_root.get("finalStatus") or "")
+    engineering_status = str(manifest_root.get("engineeringStatus") or "")
+    visual_status = str(manifest_root.get("visualStatus") or "")
+    source_status = str(manifest_root.get("sourcePreservationStatus") or "")
+    records = diagram_records(manifest_obj)
 
     manifest_capability = manifest_root.get("capabilityLevel")
     preflight_capability = preflight.get("capabilityLevel")
@@ -160,8 +180,36 @@ def main() -> int:
         errors.append("capabilityLevel is not L4")
     if native_required and not native_verified:
         errors.append("native delivery required but nativeMdjVerified is false")
+    if status_claim == "Verified":
+        if not is_verified(engineering_status):
+            errors.append("final Verified requires root engineeringStatus Verified")
+        if not is_verified(visual_status):
+            errors.append("final Verified requires root visualStatus Verified")
+        if source_status and not is_verified(source_status):
+            errors.append("final Verified requires root sourcePreservationStatus Verified when present")
+        if not records:
+            errors.append("final Verified requires diagram records")
+    if status_claim == "Verified":
+        for idx, record in enumerate(records, start=1):
+            if not is_verified(record.get("engineeringStatus")):
+                errors.append(f"diagram record {idx} requires engineeringStatus Verified for final Verified")
+            if not is_verified(record.get("visualStatus")):
+                errors.append(f"diagram record {idx} requires visualStatus Verified for final Verified")
+            source = str(record.get("source", ""))
+            consistency = str(record.get("consistency", ""))
+            if source in {"draw_from_plan", "plantuml-fallback"} and consistency == "native":
+                errors.append(f"diagram record {idx} non-native source cannot claim native consistency")
 
-    verified = not errors and manifest_ok and capability == "L4" and preflight_status == "Verified" and native_verified
+    verified = (
+        not errors
+        and manifest_ok
+        and capability == "L4"
+        and preflight_status == "Verified"
+        and native_verified
+        and is_verified(engineering_status)
+        and is_verified(visual_status)
+        and (not source_status or is_verified(source_status))
+    )
     final_status = "Verified" if verified else "Unverified"
     if invalid_input:
         final_status = "Failed"
@@ -176,6 +224,9 @@ def main() -> int:
         "fallbackUsed": fallback_used,
         "backend": backend,
         "pathBase": manifest_root.get("pathBase") or "project-root",
+        "engineeringStatus": engineering_status,
+        "visualStatus": visual_status,
+        "sourcePreservationStatus": source_status,
         "errors": errors,
         "warnings": warnings,
         "manifestReport": manifest_report,

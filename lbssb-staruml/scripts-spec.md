@@ -119,6 +119,22 @@ Allowed pattern:
 6. Apply local move/resize/edge repair.
 7. Continue batch generation only after the layout pattern passes.
 
+## Project Directory Support
+
+Project scripts must accept project-root parameters instead of hard-coding one user's path whenever practical:
+
+```text
+--project-root <dir>
+--source-mdj <file>
+--guide <file>
+--output-dir <dir>
+--manifest <file>
+```
+
+If a temporary script is hard-coded for one project, record that in `.lbssb/scripts-inventory.md` and do not promote it as a reusable Skill tool.
+
+Hard-coded absolute paths are allowed only for one-off project scripts inside that project. Reusable Skill scripts must use CLI parameters or environment variables.
+
 ## Static Scan Gate
 
 Before final acceptance, scan generated scripts and manifests for contradiction patterns:
@@ -250,3 +266,15 @@ Every PNG record must include:
 ```
 
 If PNG source is `normalized`, also record `baseFile` when possible.
+
+The root manifest must include:
+
+```json
+{
+  "engineeringStatus": "Verified | Unverified: <reason> | Failed: <reason>",
+  "visualStatus": "Verified | Unverified: <reason> | Failed: <reason>",
+  "sourcePreservationStatus": "Verified | Unverified: <reason> | Failed: <reason>"
+}
+```
+
+`tools/validate_manifest.py` and `tools/verify_deliverables.py` must reject native `Verified` delivery when any required visual/source-preservation status is missing.

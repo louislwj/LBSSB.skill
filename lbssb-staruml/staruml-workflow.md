@@ -30,6 +30,7 @@ Rerun preflight after any environment change, including:
    - Tool: shell scan, MCP project info, document extraction when needed.
    - Output: project root, source files, output target.
    - Success: inputs are recorded in `.lbssb/context.md`.
+   - Project-directory rule: if the user gives a directory, treat every `.mdj`, `.docx`, screenshot, `.lbssb`, and `tools/lbssb` file under that directory as possible project evidence before drawing. Do not assume a blank project.
 
 2. Locate source `.mdj`.
    - Input: user path, project scan, or `.lbssb/context.md`.
@@ -71,8 +72,9 @@ Rerun preflight after any environment change, including:
 8. Build DiagramPlan and LayoutPlan.
    - Input: guide requirements, source inventory, business logic.
    - Tool: local planning, `.lbssb` records.
-   - Output: diagram plan, layout zones/lanes/anchors, source-preservation rules.
+   - Output: `.lbssb/diagram-plan.json`, `.lbssb/layout-plan.json`, layout zones/lanes/anchors, source-preservation rules.
    - Success: high-risk diagrams and pilot diagram are identified.
+   - Required fields: every diagram records `type`, `title`, `businessGoal`, source evidence, main elements, main relations/messages/flows, layout zones, and risk level.
 
 9. Draw pilot/high-risk diagram first.
    - Input: DiagramPlan and LayoutPlan.
@@ -80,6 +82,7 @@ Rerun preflight after any environment change, including:
    - Output: one native StarUML diagram.
    - Success: diagram exists, exports PNG, and passes visual review.
    - Constraint: do not batch-generate all diagrams before seeing a real exported PNG.
+   - Failure action: if the pilot export is visually poor, repair the pilot locally or change the layout plan before generating more diagrams.
 
 10. Generate or repair remaining diagrams.
    - Input: proven DiagramPlan/LayoutPlan.
@@ -106,6 +109,7 @@ Rerun preflight after any environment change, including:
     - Output: repaired native diagrams and updated PNGs.
     - Success: every required diagram passes `visual-quality-gates.md`.
     - Failure: mark `Unverified: diagram quality gate failed`.
+    - Hard rule: exported PNG existence, file size, and diagram count never prove visual quality.
 
 14. Render clear fallback if needed.
     - Input: DiagramPlan.
@@ -117,7 +121,7 @@ Rerun preflight after any environment change, including:
     - Input: `.mdj`, PNGs, source route.
     - Tool: script or manual JSON.
     - Output: `diagram-manifest.json`.
-    - Success: every PNG has a record with engineering status, visual status, and source-preservation status.
+    - Success: every PNG has a record with `engineeringStatus`, `visualStatus`, and source-preservation status. Root manifest also records `engineeringStatus`, `visualStatus`, and `sourcePreservationStatus`.
 
 16. Update `.lbssb/next-action.md`.
     - Input: status and remaining work.
@@ -147,6 +151,21 @@ Rerun preflight after any environment change, including:
 - Reporting `Verified` when engineering checks pass but exported diagrams are visually poor.
 - Running global auto-layout repeatedly and accepting the result without PNG inspection.
 - Rebuilding class diagrams from scratch when a source `.mdj` contains user-defined class names, English attributes, or operations.
+- Calling Mermaid import, global `layout_diagram`, or row/column grid placement the final layout strategy for complex diagrams.
+- Writing `finalStatus: Verified` or `status: Verified` before root and per-diagram visual/source-preservation status fields are present.
+
+## Native Drawing Discipline
+
+Use MCP like a human drafter, not a bulk scatter tool:
+
+1. Place semantic zones first.
+2. Create main nodes/classes/states/lifelines with final-ish sizes.
+3. Create primary relationships/messages/flows.
+4. Export the pilot PNG.
+5. Move/resize/reroute locally.
+6. Add secondary include/dependency/return/exception lines only after the main flow is readable.
+
+Do not create all nodes and all lines in one dense pass unless the script already has a proven layout plan for that diagram type.
 
 ## PlantUML Fallback
 

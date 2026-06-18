@@ -48,6 +48,9 @@ It must not use `nativeMdjVerified: true` or `status: Verified`.
 - `nativeMdjVerified` is true;
 - status is `Verified`;
 - `.mdj` starts with ZIP magic bytes `PK`.
+- root `engineeringStatus`, `visualStatus`, or `sourcePreservationStatus` is missing or not `Verified`.
+- a diagram record lacks `engineeringStatus: Verified` or `visualStatus: Verified`.
+- a fallback or `draw_from_plan` PNG claims `consistency: native`.
 
 Expected exit code: `1` or `2`.
 
@@ -64,6 +67,24 @@ python lbssb-staruml/tools/verify_deliverables.py --manifest lbssb-staruml/tests
 ```
 
 Expected result: non-zero exit code.
+
+## Visual Status Gate
+
+Native StarUML delivery is not `Verified` until manifest root and every diagram record contain:
+
+```json
+{
+  "engineeringStatus": "Verified",
+  "visualStatus": "Verified",
+  "sourcePreservationStatus": "Verified"
+}
+```
+
+If the `.mdj` opens and exports but the diagrams are tangled, clipped, or unreviewed, the expected final status is:
+
+```text
+Unverified: diagram quality gate failed
+```
 
 ## Legitimate PlantUML Fallback Example
 
