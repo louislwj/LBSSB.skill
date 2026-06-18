@@ -82,6 +82,20 @@ Line budget:
 - include/extend lines stay inside the boundary whenever possible.
 - hide or defer secondary actor lines if they cross use case labels.
 - if a single actor has more than 6 direct associations, introduce module entry use cases or split the diagram.
+- overall use case diagrams must use actor-side lanes plus module entry use cases; never route all actor associations through the central use-case cluster.
+- left-side actors get left-edge ports; right-side actors get right-edge ports; payment/external actors get a separate outer lane with short horizontal links.
+- primary actor lines may cross at most once per whole diagram; if two or more crossings appear in the same actor lane, split the actor links through module entry use cases.
+- route actor links around the boundary edge first, then into the target use case; avoid long diagonals through labels.
+- include/extend labels must be placed between ovals, not on top of ovals or actor lines.
+
+Overall use case repair actions:
+
+1. Move actors to fixed outer lanes before touching use cases.
+2. Place module entry use cases in the first inner column near the actor that owns them.
+3. Place shared include/extend use cases in a second inner column next to their base use cases.
+4. Route actor associations as orthogonal edge paths through boundary-side corridors.
+5. Reroute include/extend paths inside the boundary after actor paths are stable.
+6. Export and reject if any line crosses an oval label or if the left actor lane has visible line braiding.
 
 ## Class Layout
 
@@ -164,6 +178,21 @@ Line budget:
 - labels over 12 Chinese characters must be shortened or moved to notes.
 - no transition label may overlap another state box.
 - use orthogonal routes for return/cancel transitions.
+- reserve explicit label slots for every transition before exporting.
+- main lifecycle transitions use top or center lanes; exception, cancel, timeout, repair, reject, refund, and close transitions use outer lanes.
+- if StarUML places a transition label inside a state block, move the connected states farther apart or reroute that transition through an outer channel.
+- if two transition labels are closer than one label height, offset one label lane by at least 42 px.
+- do not put long Chinese transition text on the edge itself; replace it with short event words and record the full explanation in README/manifest notes.
+- line z-order is not a substitute for layout. Even when StarUML draws lines behind nodes, labels must still avoid nodes and other labels.
+
+State diagram repair actions:
+
+1. Size every state from text budget: `width >= max(180, 16 * labelChars + 56)`, `height >= 74`.
+2. Put normal lifecycle states on a straight row or two-row rhythm.
+3. Put abnormal states in a side lane or lower lane.
+4. Route backward/exception transitions around the outside of the lifecycle row.
+5. Shorten transition labels to event words, then reserve a label slot on the routed segment.
+6. Export and reject if any transition label touches a state box, pseudostate, final node, or another label.
 
 Baseline-aligned state layout:
 

@@ -23,6 +23,10 @@ For native StarUML work, MCP is a drafting tool, not an auto-layout substitute. 
 
 Prefer improvement over rebuild. If the project directory, parent workspace, or user-supplied references contain a higher-quality `.mdj` or exported PNG set for the same assignment/domain, use it as the baseline style and structure before drawing anything from scratch. Record the chosen baseline in `.lbssb/context.md` and manifest.
 
+Do not clone a baseline unless the user explicitly asks for an identical reproduction. A baseline is a style oracle and defect oracle: reuse its business coverage, naming discipline, and readable layout patterns, then adapt the new project semantics. If the new output has the same diagram names, same business object set, and same exported images as the baseline without a user request for cloning, mark `Unverified: baseline copied instead of generalized`.
+
+When forward-testing this Skill, use multiple different business scenarios. A same-domain baseline pass is not enough. At minimum, test five small project folders with distinct domains and verify that each output uses project-specific actors, use cases, states, and labels.
+
 Required before bulk native drawing:
 
 1. Read the source model vocabulary and preserve existing identifiers.
@@ -63,6 +67,8 @@ Diagram-specific non-negotiables:
 - Class diagrams with a source `.mdj` must read source inventory before authoring. Existing English class names, attributes, operations, and types are data, not decoration.
 - State diagrams must size state boxes from the longest visible label and keep exception/cancel flows in a side lane.
 - Sequence diagrams must record participant order, lifeline spacing, message y positions, visible message numbers, and fragment bounds before final export.
+- Lines must not visually dominate or obscure nodes. Relationship/transition/message routes must stay outside node text compartments wherever possible, and labels must have reserved non-overlap positions. If StarUML draws edges above nodes or labels inside nodes, reroute or enlarge/reposition nodes until the exported PNG is readable.
+- Overall use case diagrams and state diagrams are high-risk diagrams. Always pilot-export these before batch acceptance. Do not mark `Verified` while either still has crossed actor lines through the use-case cluster, transition labels embedded in state boxes, or overlapping transition labels.
 
 ## Delivery Fail-Fast Contract
 
@@ -120,6 +126,7 @@ Before executing any route, verify these package files exist:
 - `tools/verify_deliverables.py`
 - `tools/lint_generation_strategy.py`
 - `tools/visual_geometry_audit.py`
+- `tools/visual_overlap_audit.py`
 - `tool-specs/mcp-readme.spec.md`
 - `tool-specs/mcp-config-examples.spec.md`
 - `tool-specs/validate-staruml-mcp.spec.md`
@@ -170,6 +177,7 @@ Single-diagram tasks must not enter the full training-project flow. Full project
 - Final deliverable verification: use `tools/verify_deliverables.py` and `tools/validate_manifest.py`.
 - Script generation strategy lint: use `tools/lint_generation_strategy.py` before accepting generated native authoring scripts.
 - Optional geometry/layout evidence: use `tools/visual_geometry_audit.py` when `.lbssb/layout-plan.json` exists or when native diagram quality is disputed.
+- High-risk overlap evidence: use `tools/visual_overlap_audit.py` for overall use case diagrams, state diagrams, or any disputed line/label layout.
 - Token budget control: read `token-control.md`.
 - Chinese paths, Chinese filenames, Markdown/JSON/.mdj encoding, PowerShell/Node/Python encoding handling: read `encoding-policy.md`.
 

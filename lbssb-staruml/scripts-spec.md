@@ -34,6 +34,7 @@ Scripts are internal Skill tool caches, not prerequisites the user must understa
 | `build_diagram_plan.py` or `.mjs` | Convert requirements and source inventory into diagram/layout plan | guide text, source inventory | `diagram-plan.json`, `layout-plan.json` | project name, output dir |
 | `visual_quality_check.py` | Record page/image-level visual review results | exported PNG dir, expected diagrams | visual review JSON | min sizes, manual notes |
 | `visual_geometry_audit.py` | Check layout-plan/native-view geometry evidence before `Verified` | `.lbssb/layout-plan.json`, optional inventory/export index | JSON audit report | expected diagrams, min sizes |
+| `visual_overlap_audit.py` | Check node/edge/label overlap evidence for high-risk diagrams | `.lbssb/layout-plan.json` or native view snapshot | JSON audit report | node boxes, routed points, label boxes |
 | `course_style_repair.mjs` | Native StarUML manual-style layout repair based on baseline good projects | project `.mdj`, diagram names, layout specs | saved `.mdj`, repaired PNGs, repair report | `PROJECT_FILE`, `OUT_DIR`, API ports, diagram specs |
 | `tools/start_project_staruml.ps1` | Resolve and start project/system StarUML safely | project root, optional runtime config | JSON startup result | ports, wait seconds |
 | `tools/check_staruml_preflight.py` | Hard preflight and capability level report | project root, optional evidence | `.lbssb/preflight-report.json` | evidence file, MCP tools JSON |
@@ -133,6 +134,9 @@ endpointNodes(ctx)
 setBox(view, x, y, width, height)
 setEdge(edge, points, lineStyle)
 routeGeneric(ctx, options)
+routeWithSideCorridors(ctx, options)
+reserveLabelSlots(ctx, options)
+auditNodeEdgeAndLabelOverlap(layoutPlanOrSnapshot)
 layoutUseCases()
 layoutClassDiagram()
 layoutSequenceDiagram()
@@ -178,6 +182,9 @@ For final native `.mdj` delivery, treat these as hard failures before production
 - hard-coded translated class members when source preservation is required;
 - batch creation of all diagrams before pilot export/review;
 - stale visual review evidence after re-exported PNGs.
+- high-risk use case/state diagrams with no node/edge/label overlap audit.
+- overall use case scripts that connect every actor directly to many use cases without entry/module routing.
+- state diagram scripts that keep long transition sentences on edges instead of short labels plus documentation notes.
 
 Run:
 
@@ -196,6 +203,18 @@ Allowed pattern:
 5. Export and inspect.
 6. Apply local move/resize/edge repair.
 7. Continue batch generation only after the layout pattern passes.
+
+## Five-Scenario Forward Test
+
+When improving this Skill itself, validate against five distinct mini-projects rather than one copied baseline:
+
+1. Create five project folders under the test workspace.
+2. Give each folder a different business domain and vocabulary.
+3. Produce at least one overall use case diagram and one state diagram per folder.
+4. Reuse baseline style rules only as layout constraints; do not reuse baseline diagram names or business objects.
+5. Write per-project `.lbssb/diagram-plan.json`, `.lbssb/layout-plan.json`, `diagram-manifest.json`, and visual review evidence.
+6. Run script lint plus geometry/overlap audit.
+7. Reject the Skill update if any scenario has actor-line braiding, line-through-node text, state label overlap, or unrequested baseline cloning.
 
 ## Project Directory Support
 

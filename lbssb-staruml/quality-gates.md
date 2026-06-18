@@ -7,6 +7,7 @@ The final status is `Verified` only when the required gates pass. If a gate cann
 - StarUML delivery preflight passed when editable `.mdj` delivery is requested.
 - Local baseline assets were checked when the user mentions a parent workspace, old result, "mother directory", previous output, or another known-good project.
 - If a baseline `.mdj`/PNG set exists for the same assignment/domain, the final result is not allowed to be visibly worse than that baseline.
+- If a baseline is used as a style reference, the final result must still be project-specific. It must not be an unrequested clone with unchanged diagram names, unchanged business objects, and unchanged scenario labels.
 - Required `.mdj` exists when editable delivery is requested.
 - Required PNGs exist and are non-empty.
 - Manifest exists and records every PNG.
@@ -18,6 +19,7 @@ The final status is `Verified` only when the required gates pass. If a gate cann
 - Diagram type matches the business logic it claims to show.
 - No source `.mdj` is modified directly.
 - No silent fallback was used.
+- Known visual defects reported by the user must be regression tests. For this Skill, overall use case line crossing and state transition label overlap are hard visual failures.
 
 ## StarUML MDJ Delivery Gate
 
@@ -203,6 +205,9 @@ PlantUML fallback 已生成；StarUML native `.mdj` 未验证/不可用。
 - Overall diagrams keep actor lines outside the main use-case cluster whenever possible.
 - A single actor with more than 6 direct associations must use entry use cases, module gateways, or split diagrams.
 - Overall use case diagrams must not use an actor bus that crosses the main use-case labels.
+- Overall use case diagrams fail if left-side actor associations visibly braid through the central cluster.
+- Overall use case diagrams fail if two actor associations cross inside the same actor lane or if any actor line passes through use-case text.
+- Actor association routing must show side corridors or module entry points when there are more than 12 use cases.
 - If the baseline uses readable direct actor associations plus visible `include` semantics, do not simplify it into disconnected module-entry ovals.
 - Role-specific use case diagrams must retain enough actual use cases to be useful as assignment deliverables; "module labels only" fails unless a separate detailed diagram exists.
 
@@ -267,6 +272,10 @@ PlantUML fallback 已生成；StarUML native `.mdj` 未验证/不可用。
 - Transition labels do not overlap state boxes, pseudostates, or other labels.
 - Long transition explanations are shortened or moved to documentation/notes.
 - Transition labels may be placed near routed lines as standalone native labels when StarUML would otherwise overlap boxes; label readability wins over dense orthogonal routing.
+- Transition labels fail the gate if they touch or enter a state box.
+- Transition labels fail the gate if two labels overlap or visually merge.
+- Backward, cancel, timeout, refund, reject, repair, offline, and close transitions must use outer channels unless the lifecycle has enough whitespace for direct routing.
+- State boxes must reserve label width before transitions are drawn; fixing z-order alone is not enough.
 - If the baseline state diagram has fewer crossings and clearer lifecycle grouping, the generated result cannot be `Verified` until it reaches at least that readability.
 
 ## Component Diagram
