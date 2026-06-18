@@ -5,6 +5,8 @@ The final status is `Verified` only when the required gates pass. If a gate cann
 ## Universal
 
 - StarUML delivery preflight passed when editable `.mdj` delivery is requested.
+- Local baseline assets were checked when the user mentions a parent workspace, old result, "mother directory", previous output, or another known-good project.
+- If a baseline `.mdj`/PNG set exists for the same assignment/domain, the final result is not allowed to be visibly worse than that baseline.
 - Required `.mdj` exists when editable delivery is requested.
 - Required PNGs exist and are non-empty.
 - Manifest exists and records every PNG.
@@ -120,6 +122,14 @@ Common fail conditions:
 - PNGs were re-exported after the last recorded visual review;
 - scripts batch-create all diagrams and only export at the end;
 - direct `.mdj` file synthesis is used instead of StarUML MCP/API object creation.
+- a trusted baseline project exists but the agent ignores it and rebuilds a lower-quality project from scratch.
+- final native scripts lack explicit `set_view_bounds` / `set_edge_points` style repair for high-risk diagrams.
+
+Preferred pass condition:
+
+- initial generation creates semantic model objects;
+- a course-style native repair pass sets concrete bounds/routes per diagram family;
+- exported PNGs are visually compared with the baseline or reference style before `Verified`.
 
 ## PlantUML Fallback Gate
 
@@ -193,10 +203,13 @@ PlantUML fallback 已生成；StarUML native `.mdj` 未验证/不可用。
 - Overall diagrams keep actor lines outside the main use-case cluster whenever possible.
 - A single actor with more than 6 direct associations must use entry use cases, module gateways, or split diagrams.
 - Overall use case diagrams must not use an actor bus that crosses the main use-case labels.
+- If the baseline uses readable direct actor associations plus visible `include` semantics, do not simplify it into disconnected module-entry ovals.
+- Role-specific use case diagrams must retain enough actual use cases to be useful as assignment deliverables; "module labels only" fails unless a separate detailed diagram exists.
 
 ## Class Diagram
 
 - Domain model is visually central.
+- BCE layered class diagrams are acceptable and preferred for training-project deliverables when no source model contradicts them.
 - Role inheritance is separate and readable.
 - Class count and relationship count meet `class-diagram-rules.md`.
 - Multiplicity labels exist on core associations.
@@ -206,8 +219,10 @@ PlantUML fallback 已生成；StarUML native `.mdj` 未验证/不可用。
 - Relationship lines do not cross title compartments.
 - Core relationship completeness is at least 90%.
 - Existing English class/attribute/operation names are preserved when a source model exists.
+- Boundary/Control/Entity stereotypes are preserved or intentionally recorded when a baseline project uses BCE.
 - Class boxes are sized to fit all visible attributes and operations.
 - Global auto-layout did not destroy semantic grouping, or a local repair pass restored it.
+- If a trusted baseline class diagram has clearer BCE/layer hierarchy than the generated diagram, the generated diagram cannot be `Verified`.
 
 ## Sequence Diagram
 
@@ -221,6 +236,7 @@ PlantUML fallback 已生成；StarUML native `.mdj` 未验证/不可用。
 - Long participant names fit in headers.
 - Mermaid-imported sequence diagrams have been visually inspected and repaired before final acceptance.
 - Branch text is inside a visible fragment or clearly associated with the branch.
+- If the baseline uses compact numbered messages without oversized fragment clutter, the generated result may follow that style. The gate is semantic ordering and readability, not decorative fragment strictness.
 
 ## Activity Diagram
 
@@ -250,6 +266,8 @@ PlantUML fallback 已生成；StarUML native `.mdj` 未验证/不可用。
 - State boxes reserve enough width for Chinese labels.
 - Transition labels do not overlap state boxes, pseudostates, or other labels.
 - Long transition explanations are shortened or moved to documentation/notes.
+- Transition labels may be placed near routed lines as standalone native labels when StarUML would otherwise overlap boxes; label readability wins over dense orthogonal routing.
+- If the baseline state diagram has fewer crossings and clearer lifecycle grouping, the generated result cannot be `Verified` until it reaches at least that readability.
 
 ## Component Diagram
 
@@ -282,6 +300,19 @@ Each record must include:
   "visualStatus": "Verified | Unverified: <reason> | Failed: <reason>"
 }
 ```
+
+When a baseline is used, manifest root must also record:
+
+```json
+{
+  "baselineUsed": true,
+  "baselineMdj": "",
+  "baselinePngDir": "",
+  "baselineAlignmentStatus": "Verified | Unverified: <reason>"
+}
+```
+
+For editable StarUML tasks, `baselineAlignmentStatus` must be `Verified` when a same-assignment baseline exists.
 
 Compatibility rule:
 

@@ -34,6 +34,7 @@ Scripts are internal Skill tool caches, not prerequisites the user must understa
 | `build_diagram_plan.py` or `.mjs` | Convert requirements and source inventory into diagram/layout plan | guide text, source inventory | `diagram-plan.json`, `layout-plan.json` | project name, output dir |
 | `visual_quality_check.py` | Record page/image-level visual review results | exported PNG dir, expected diagrams | visual review JSON | min sizes, manual notes |
 | `visual_geometry_audit.py` | Check layout-plan/native-view geometry evidence before `Verified` | `.lbssb/layout-plan.json`, optional inventory/export index | JSON audit report | expected diagrams, min sizes |
+| `course_style_repair.mjs` | Native StarUML manual-style layout repair based on baseline good projects | project `.mdj`, diagram names, layout specs | saved `.mdj`, repaired PNGs, repair report | `PROJECT_FILE`, `OUT_DIR`, API ports, diagram specs |
 | `tools/start_project_staruml.ps1` | Resolve and start project/system StarUML safely | project root, optional runtime config | JSON startup result | ports, wait seconds |
 | `tools/check_staruml_preflight.py` | Hard preflight and capability level report | project root, optional evidence | `.lbssb/preflight-report.json` | evidence file, MCP tools JSON |
 | `tools/check_staruml_preflight.ps1` | Windows wrapper for Python preflight | same as Python script | `.lbssb/preflight-report.json` | Python executable |
@@ -100,6 +101,53 @@ Allowed use:
 
 If such a script still writes a `.mdj`, mark the delivery `Failed: invalid native StarUML authoring path`.
 
+## Course-Style Native Repair Script
+
+When the parent workspace or supplied references contain good StarUML outputs for the same assignment/domain, prefer a reusable repair script over fresh generation.
+
+Recommended file:
+
+```text
+tools/lbssb/course_style_repair.mjs
+```
+
+Required behavior:
+
+- accept `PROJECT_ROOT`, `PROJECT_FILE`, `OUT_DIR`, and optional `LAYOUT_SPEC` through env vars or CLI args;
+- open the project through StarUML MCP/API;
+- locate diagrams by name/type;
+- collect nodes and edges from actual diagram views;
+- set element bounds with StarUML API/MCP;
+- route edges with StarUML API/MCP;
+- preserve existing model elements, English identifiers, and BCE stereotypes;
+- delete only non-essential noisy View/dependency views when recorded;
+- export repaired PNGs;
+- write a repair report with changed diagrams and visual-review TODOs.
+
+Recommended helpers:
+
+```text
+loadDiagram(name, types)
+namedNodes(ctx)
+endpointNodes(ctx)
+setBox(view, x, y, width, height)
+setEdge(edge, points, lineStyle)
+routeGeneric(ctx, options)
+layoutUseCases()
+layoutClassDiagram()
+layoutSequenceDiagram()
+layoutStateDiagram()
+layoutCommunicationDiagram()
+```
+
+Parameterize stable geometry from:
+
+```text
+.lbssb/layout-specs/<diagram-name>.json
+```
+
+Do not keep many pass-specific scripts (`repair-pass2`, `repair-pass3`, etc.) as the final workflow. Once a repair works, consolidate it into `course_style_repair.mjs`.
+
 ## Forbidden Layout Script Patterns
 
 Reject or mark `visualStatus: Unverified` when a native generation script:
@@ -117,6 +165,8 @@ Reject or mark `visualStatus: Unverified` when a native generation script:
 - creates state diagrams without explicit state box sizing;
 - creates class diagrams without restoring source inventory before sizing class boxes.
 - records `visualStatus: Verified` without `visualReviewedAt`/`reviewedAt` evidence newer than exported PNGs.
+- ignores an available same-assignment baseline `.mdj`/PNG set and rebuilds a visibly worse project from scratch.
+- lacks any `set_view_bounds` / `set_edge_points` native repair pass for high-risk use case, class, sequence, or state diagrams.
 
 For final native `.mdj` delivery, treat these as hard failures before production drawing:
 

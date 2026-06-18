@@ -21,15 +21,18 @@ Do not confuse execution success with diagram quality. A project that opens, sav
 
 For native StarUML work, MCP is a drafting tool, not an auto-layout substitute. Before creating or repairing complex diagrams, build and record a real layout plan.
 
+Prefer improvement over rebuild. If the project directory, parent workspace, or user-supplied references contain a higher-quality `.mdj` or exported PNG set for the same assignment/domain, use it as the baseline style and structure before drawing anything from scratch. Record the chosen baseline in `.lbssb/context.md` and manifest.
+
 Required before bulk native drawing:
 
 1. Read the source model vocabulary and preserve existing identifiers.
 2. Write `.lbssb/diagram-plan.json` for business semantics.
 3. Write `.lbssb/layout-plan.json` with canvas, zones, element bounds, primary edges, secondary edges, label budgets, and routing rules.
-4. Run script strategy lint before production drawing when generated scripts are used.
-5. Draw one pilot/high-risk native diagram.
-6. Export and visually inspect the pilot PNG.
-7. Continue bulk generation only after the pilot passes visual gates.
+4. Search for local baseline assets before generation: parent `mcp/*.mjs` repair scripts, previous `.mdj`, exported PNGs, `.lbssb/`, reports, and course/reference summaries.
+5. Run script strategy lint before production drawing when generated scripts are used.
+6. Draw or repair one pilot/high-risk native diagram.
+7. Export and visually inspect the pilot PNG.
+8. Continue bulk generation only after the pilot passes visual gates.
 
 If the pilot fails, stop batch generation and repair the pilot locally using move/resize/reroute actions. Do not continue creating the remaining diagrams just because MCP calls succeed.
 
@@ -42,6 +45,15 @@ Human-like native drawing means:
 - draw primary relationships/messages/flows first;
 - add secondary include/dependency/return/exception lines only after the main structure is readable;
 - export and repair locally before repeating the pattern.
+
+Use the "course-style repair" pattern when available:
+
+- create semantic elements once;
+- set final-ish bounds with `set_view_bounds`;
+- route relationship/message/transition edges with `set_edge_points`;
+- delete only noisy View/technical dependency clutter, not required model semantics;
+- export after each high-risk diagram family;
+- visually compare against the baseline PNG style before marking `visualStatus: Verified`.
 
 Global auto-layout, Mermaid import, and row/column grid placement may only be draft accelerators. They are not final layout strategies for use case, class, state, or sequence diagrams.
 
@@ -73,10 +85,14 @@ Required intake:
 2. Copy or create a working `.mdj`; do not edit the source `.mdj` directly.
 3. Read existing diagrams and model vocabulary.
 4. Record preserved source terms in `.lbssb/business-logic.md` or manifest.
-5. Build `DiagramPlan` plus `LayoutPlan`.
-6. Draw a pilot or highest-risk diagram, export PNG, visually inspect, then continue.
+5. Inspect parent/sibling baseline assets before rebuilding. Examples: previous good `.mdj`, `图形导出/`, `analysis/reference-renders/`, `mcp/apply-course-style.mjs`, `mcp/fix-layout.mjs`, `mcp/final-clean-class-diagram.mjs`, and course modeling summaries.
+6. If a baseline `.mdj` already satisfies the current assignment better than a generated draft, copy it into the working output and adapt only the required project-specific metadata/content.
+7. Build `DiagramPlan` plus `LayoutPlan`.
+8. Draw a pilot or highest-risk diagram, export PNG, visually inspect, then continue.
 
 If source model data cannot be read, mark `Source Preservation Unverified` and do not claim preserved class/attribute names.
+
+Do not spend tokens re-deriving what local project assets already prove. Prefer short scans, manifests, script names, and rendered PNG inspection over long narrative analysis.
 
 ## Skill Package Integrity
 

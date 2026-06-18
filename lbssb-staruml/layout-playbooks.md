@@ -4,14 +4,27 @@ These playbooks define human-like layout strategy before MCP drawing.
 
 ## General Method
 
-1. Build `DiagramPlan`: elements and relationships.
-2. Build `LayoutPlan`: zones, lanes, anchor points, expected line routes.
-3. Draw a pilot diagram or the highest-risk diagram first.
-4. Export PNG and inspect visually.
-5. Repair locally using move/resize/edge routing.
-6. Reuse the proven layout pattern for the remaining diagrams.
+1. Inspect local baselines first: parent `mcp/*.mjs`, previous good `.mdj`, exported PNGs, `.lbssb`, and course/reference summaries.
+2. If a good baseline project exists for the same assignment/domain, copy/adapt that `.mdj` instead of rebuilding from scratch.
+3. Build `DiagramPlan`: elements and relationships.
+4. Build `LayoutPlan`: zones, lanes, anchor points, expected line routes.
+5. Draw or repair a pilot diagram or the highest-risk diagram first.
+6. Export PNG and inspect visually.
+7. Repair locally using move/resize/edge routing.
+8. Reuse the proven layout pattern for the remaining diagrams.
 
 Do not batch-generate every diagram before seeing one exported result.
+
+The preferred native repair implementation is the course-style script pattern:
+
+- `loadDiagram(name, types)`;
+- `namedNodes(ctx)` and `endpointNodes(ctx)`;
+- `setBox(view, x, y, width, height)` through StarUML API/MCP;
+- `setEdge(edge, points, lineStyle)` through StarUML API/MCP;
+- explicit layout maps per diagram family;
+- export and inspect after each family.
+
+This pattern is faster and visually better than repeated global auto-layout. Use global auto-layout only as a draft bootstrap and never after final manual bounds/routes are set.
 
 ## LayoutPlan Minimum
 
@@ -46,6 +59,14 @@ For single-actor diagrams, group by business module:
 - evaluation/ranking.
 
 Actor lines should connect to module entry use cases. Shared includes stay close to the base use case.
+
+Baseline-aligned use case layout:
+
+- for role-specific diagrams, a vertical main-use-case column is acceptable and often clearer than artificial module cards;
+- place secondary included use cases in a right-side column close to their base use cases;
+- preserve `<<include>>` / `<<extend>>` semantics when they are readable;
+- avoid a central actor bus; if actor lines are numerous, keep the actor outside the boundary and connect directly with clean diagonal/short lines;
+- do not replace a semantically rich use case diagram with isolated "module entry" ovals unless the included/extended details remain visible elsewhere.
 
 Coordinate defaults:
 
@@ -94,6 +115,17 @@ Coordinate defaults:
 - support zone: bottom or outer edges; support boxes should not dominate entity boxes.
 - class width: max of `220` and `8 * longestMemberChars + 60`; height from visible compartments.
 
+Baseline-aligned class layout:
+
+- BCE style is preferred for training-project deliverables when no conflicting source model exists.
+- Left column: `<<boundary>>` View/Adapter classes.
+- Middle-left column: `<<control>>` Control classes.
+- Middle/right area: `<<entity>>` domain classes.
+- Far right/bottom: support records, payment/review, repository/interface/external classes.
+- Preserve English class names, attributes, operations, and stereotypes.
+- It is better to show fewer high-value dependencies clearly than to draw every View-to-Control or Control-to-Repository dependency through the domain trunk.
+- Multiplicity labels are first-class deliverable content. Reposition them after routing.
+
 Line budget:
 
 - draw inheritance and compositions first.
@@ -133,6 +165,15 @@ Line budget:
 - no transition label may overlap another state box.
 - use orthogonal routes for return/cancel transitions.
 
+Baseline-aligned state layout:
+
+- use 4-8 stable lifecycle states per object;
+- place the normal lifecycle in a simple row or two-row rhythm;
+- place cancellation, timeout, repair, scrap, and offline transitions on outer channels;
+- use short labels such as `订单取消或超时`, `订单支付成功`, `办理借书`, `读者还书`, `检查正常`, `无法修复`;
+- prefer readable separated labels over dense central routing;
+- final state may be omitted from the visual center if terminal states are already explicit and the diagram remains valid for the assignment.
+
 ## Sequence Layout
 
 Use stable participant order:
@@ -157,6 +198,15 @@ Line budget:
 - returns are shorter/dashed and should not carry core business text.
 - `alt/else` frames must enclose the branch messages, not sit as a detached label.
 - if the longest message cannot fit between adjacent lifelines, widen participants before export.
+
+Baseline-aligned sequence layout:
+
+- keep participant headers compact and evenly spaced;
+- show visible sequence numbers;
+- use activation bars when supported;
+- keep `alt` fragments visually lightweight, but branch messages must stay inside or immediately adjacent to their branch;
+- if StarUML's native fragment frame hurts readability, use clear numbered messages and branch guard labels rather than a large cluttered frame;
+- never accept a Mermaid-imported sequence diagram as final without rerouting lifelines, messages, labels, and fragments.
 
 ## Communication Layout
 
