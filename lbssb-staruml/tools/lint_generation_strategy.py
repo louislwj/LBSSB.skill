@@ -43,6 +43,10 @@ def has_any(text: str, patterns: Iterable[str]) -> bool:
     return any(pattern in text for pattern in patterns)
 
 
+def has_regex(text: str, patterns: Iterable[str], flags: int = 0) -> bool:
+    return any(re.search(pattern, text, flags) for pattern in patterns)
+
+
 def writes_mdj_directly(text: str) -> bool:
     if has_any(text, ["zipfile.ZipFile", "writestr('project.json'", 'writestr("project.json"']):
         return True
@@ -121,6 +125,16 @@ def lint_file(path: Path, native_final: bool, source_preservation_required: bool
             "routepolicy",
         ],
     )
+    reads_layout_plan = has_regex(
+        lower,
+        [
+            r"readfilesync\s*\([^)]*layout-plan\.json",
+            r"read_text\s*\([^)]*layout-plan\.json",
+            r"open\s*\([^)]*layout-plan\.json",
+            r"json\.loads?\([^)]*layout-plan",
+        ],
+        re.DOTALL,
+    )
     utility_script = any(
         marker in name_lower
         for marker in (
@@ -182,6 +196,14 @@ def lint_file(path: Path, native_final: bool, source_preservation_required: bool
             "missing-layout-plan",
             "Complex native diagrams require a LayoutPlan or explicit bounds/routes before final generation.",
         )
+    if native_final and final_authoring_script and complex_native_markers and "layout-plan.json" in lower and not reads_layout_plan:
+        add(
+            findings,
+            path,
+            "warning",
+            "layout-plan-mentioned-not-read",
+            "Script mentions layout-plan.json but does not appear to parse it; confirm bounds/routes are not stale hard-coded copies.",
+        )
 
     class_rebuild = has_any(text, ["createClassDiagram", "UMLClass"]) and re.search(
         r'["\'].*[\u4e00-\u9fff].*:\s*(String|Integer|Decimal|Date|DateTime|Time|Boolean)',
@@ -229,6 +251,25 @@ def lint_file(path: Path, native_final: bool, source_preservation_required: bool
             "Final sequence diagrams require explicit lifeline spacing and message vertical positions.",
         )
 
+    sequence_labels = re.findall(r'["\']([^"\']{1,80})["\']', text)
+    likely_sequence_script = native_final and final_authoring_script and (
+        "UMLSequenceDiagram" in text or "UMLLifeline" in text or "sequenceDiagram" in text
+    )
+    if likely_sequence_script:
+        human_message_labels = [
+            label
+            for label in sequence_labels
+            if re.search(r"[\u4e00-\u9fff]", label) and not re.match(r"^\d+(\.\d+)?:", label.strip())
+        ]
+        if len(human_message_labels) >= 3 and not has_any(lower, ["message number", "messagenumber", "sequence number", "numbered"]):
+            add(
+                findings,
+                path,
+                "warning",
+                "sequence-messages-not-numbered",
+                "Sequence diagram appears to contain unnumbered message labels; final diagrams require visible sequence numbers.",
+            )
+
     state_without_box_sizing = (
         native_final
         and final_authoring_script
@@ -273,6 +314,38 @@ def lint_file(path: Path, native_final: bool, source_preservation_required: bool
             "error" if native_final else "warning",
             "missing-pilot-gate",
             "Script appears to batch-create diagrams and export at the end without a pilot visual gate.",
+        )
+
+    exports_png = has_any(text, ["get_diagram_image_by_id", "exportImages", "export_diagram", "native-current-diagrams"])
+    visual_review_markers = has_any(
+        lower,
+        [
+            "visual-review.json",
+            "visualstatus",
+            "visualreviewedat",
+            "reviewedat",
+            "pilot-review",
+            "screenshot",
+            "view_image",
+        ],
+    )
+    if native_final and final_authoring_script and exports_png and not visual_review_markers:
+        add(
+            findings,
+            path,
+            "warning",
+            "export-without-visual-review-record",
+            "Script exports PNGs but does not record visual review evidence; exports alone cannot prove diagram quality.",
+        )
+
+    usecase_actor_entry_markers = has_any(lower, ["actorentry", "entryusecase", "module entry", "actor connects"])
+    if native_final and final_authoring_script and "UMLUseCaseDiagram" in text and "UMLAssociation" in text and not usecase_actor_entry_markers:
+        add(
+            findings,
+            path,
+            "warning",
+            "usecase-without-entry-policy",
+            "Use case script creates actor associations without an explicit actor-entry/module policy.",
         )
 
     hard_coded_absolute = re.search(r'["\'][A-Za-z]:[\\/]', text)

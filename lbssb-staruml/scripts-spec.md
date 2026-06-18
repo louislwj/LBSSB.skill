@@ -113,8 +113,10 @@ Reject or mark `visualStatus: Unverified` when a native generation script:
 - generates complex native diagrams without reading or embedding `.lbssb/layout-plan.json` or equivalent bounds/routes;
 - creates use case, class, state, or sequence diagrams without explicit view bounds;
 - creates sequence diagrams without explicit lifeline spacing and message y positions;
+- creates sequence diagrams without visible message numbers;
 - creates state diagrams without explicit state box sizing;
 - creates class diagrams without restoring source inventory before sizing class boxes.
+- records `visualStatus: Verified` without `visualReviewedAt`/`reviewedAt` evidence newer than exported PNGs.
 
 For final native `.mdj` delivery, treat these as hard failures before production drawing:
 
@@ -124,7 +126,8 @@ For final native `.mdj` delivery, treat these as hard failures before production
 - missing concrete LayoutPlan/bounds/routes for complex diagrams;
 - grid-based complex use case layout;
 - hard-coded translated class members when source preservation is required;
-- batch creation of all diagrams before pilot export/review.
+- batch creation of all diagrams before pilot export/review;
+- stale visual review evidence after re-exported PNGs.
 
 Run:
 
@@ -286,7 +289,8 @@ Every PNG record must include:
   "mdjDiagram": "",
   "consistency": "native | semantic-consistent | unverified",
   "engineeringStatus": "Verified | Unverified: <reason> | Failed: <reason>",
-  "visualStatus": "Verified | Unverified: <reason> | Failed: <reason>"
+  "visualStatus": "Verified | Unverified: <reason> | Failed: <reason>",
+  "visualReviewedAt": "ISO-8601 timestamp when visualStatus was assigned"
 }
 ```
 
@@ -303,3 +307,4 @@ The root manifest must include:
 ```
 
 `tools/validate_manifest.py` and `tools/verify_deliverables.py` must reject native `Verified` delivery when any required visual/source-preservation status is missing.
+They must also reject native `Verified` when visual review timestamps are missing or older than the exported PNG files.

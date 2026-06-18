@@ -33,6 +33,8 @@ Required before bulk native drawing:
 
 If the pilot fails, stop batch generation and repair the pilot locally using move/resize/reroute actions. Do not continue creating the remaining diagrams just because MCP calls succeed.
 
+The visual review must be current. If any native PNG is exported or re-exported after `.lbssb/visual-review.json`, the old review is stale and cannot support `Verified`. Re-open the newest PNGs, record concrete per-diagram results, and update manifest timestamps before verification.
+
 Human-like native drawing means:
 
 - place semantic zones/boundaries first;
@@ -42,6 +44,13 @@ Human-like native drawing means:
 - export and repair locally before repeating the pattern.
 
 Global auto-layout, Mermaid import, and row/column grid placement may only be draft accelerators. They are not final layout strategies for use case, class, state, or sequence diagrams.
+
+Diagram-specific non-negotiables:
+
+- Use case diagrams with more than 8 use cases need visible module zones or entry use cases. Actor associations connect to entry use cases, not every secondary use case.
+- Class diagrams with a source `.mdj` must read source inventory before authoring. Existing English class names, attributes, operations, and types are data, not decoration.
+- State diagrams must size state boxes from the longest visible label and keep exception/cancel flows in a side lane.
+- Sequence diagrams must record participant order, lifeline spacing, message y positions, visible message numbers, and fragment bounds before final export.
 
 ## Delivery Fail-Fast Contract
 
@@ -168,6 +177,8 @@ B. PNG delivery track: white background, dark lines, readable text, no clipped k
 
 C. Manifest track: each PNG records whether it came from `staruml-export`, `draw_from_plan`, or `normalized`, whether consistency is `native`, `semantic-consistent`, or `unverified`, and visual status for the native exported diagram.
 
+Manifest freshness is mandatory: final `Verified` requires visual review timestamps at root and/or per diagram that are not older than the corresponding exported PNG files. If timestamps are missing or stale, use `Unverified: visual review stale`.
+
 ## Native Authoring Strategy Gate
 
 Before running or accepting a generated native StarUML authoring script, scan it:
@@ -187,6 +198,8 @@ If the lint report has `status: Failed`, do not continue to bulk native generati
 - row/column use-case placement without module zones;
 - class diagram hard-coded translated members while source identifiers must be preserved;
 - batch-create-all-then-export with no pilot visual gate.
+- sequence messages without visible numbering;
+- PNG export without recorded visual review evidence.
 
 ## Verification Split
 

@@ -51,6 +51,7 @@ It must not use `nativeMdjVerified: true` or `status: Verified`.
 - root `engineeringStatus`, `visualStatus`, or `sourcePreservationStatus` is missing or not `Verified`.
 - a diagram record lacks `engineeringStatus: Verified` or `visualStatus: Verified`.
 - a fallback or `draw_from_plan` PNG claims `consistency: native`.
+- a final native `Verified` manifest lacks `visualReviewedAt`/`reviewedAt` evidence newer than the exported PNGs.
 
 Expected exit code: `1` or `2`.
 
@@ -102,6 +103,8 @@ Expected failure examples:
 - script uses row/column use case placement for complex diagrams;
 - script hard-codes translated class members while source vocabulary must be preserved;
 - script batch-creates all diagrams before a pilot export/review.
+- script creates sequence diagrams without visible message numbers;
+- script exports PNGs but does not record visual review evidence.
 
 ## Legitimate PlantUML Fallback Example
 

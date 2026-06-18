@@ -43,11 +43,20 @@ def diagram_records(manifest: Any) -> List[Dict[str, Any]]:
         return [item for item in manifest if isinstance(item, dict)]
     if not isinstance(manifest, dict):
         return []
-    for key in ("diagrams", "files", "images", "pngs"):
+    records: List[Dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for key in ("nativeDiagrams", "clearDiagrams", "diagrams", "files", "images", "pngs"):
         value = manifest.get(key)
         if isinstance(value, list):
-            return [item for item in value if isinstance(item, dict)]
-    return []
+            for item in value:
+                if not isinstance(item, dict):
+                    continue
+                identity = (str(item.get("file") or item.get("png") or item.get("path") or ""), str(item.get("diagramTitle") or item.get("name") or ""))
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                records.append(item)
+    return records
 
 
 def is_verified(value: Any) -> bool:

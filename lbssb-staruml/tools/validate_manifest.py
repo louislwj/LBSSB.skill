@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -49,11 +50,20 @@ def diagram_records(manifest: Any) -> List[Dict[str, Any]]:
         return [item for item in manifest if isinstance(item, dict)]
     if not isinstance(manifest, dict):
         return []
-    for key in ("diagrams", "files", "images", "pngs"):
+    records: List[Dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for key in ("nativeDiagrams", "clearDiagrams", "diagrams", "files", "images", "pngs"):
         value = manifest.get(key)
         if isinstance(value, list):
-            return [item for item in value if isinstance(item, dict)]
-    return []
+            for item in value:
+                if not isinstance(item, dict):
+                    continue
+                identity = (str(item.get("file") or item.get("png") or item.get("path") or ""), str(item.get("diagramTitle") or item.get("name") or ""))
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                records.append(item)
+    return records
 
 
 def root(manifest: Any) -> Dict[str, Any]:
@@ -65,6 +75,64 @@ def resolve_file(base: Path, value: str) -> Path:
     if p.is_absolute():
         return p
     return base / p
+
+
+def parse_timestamp(value: Any) -> datetime | None:
+    if not value:
+        return None
+    text = str(value).strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def newest_existing_png_mtime(records: List[Dict[str, Any]], base: Path) -> datetime | None:
+    latest: datetime | None = None
+    for record in records:
+        file_value = record.get("file") or record.get("png") or record.get("path")
+        if not file_value:
+            continue
+        png = resolve_file(base, str(file_value))
+        if not png.exists() or png.stat().st_size <= 0:
+            continue
+        modified = datetime.fromtimestamp(png.stat().st_mtime, timezone.utc)
+        if latest is None or modified > latest:
+            latest = modified
+    return latest
+
+
+def visual_review_time(data: Dict[str, Any], record: Dict[str, Any] | None = None) -> datetime | None:
+    keys = ("visualReviewedAt", "visualReviewAt", "reviewedAt")
+    if record:
+        for key in keys:
+            parsed = parse_timestamp(record.get(key))
+            if parsed:
+                return parsed
+        evidence = record.get("visualEvidence")
+        if isinstance(evidence, dict):
+            for key in keys:
+                parsed = parse_timestamp(evidence.get(key))
+                if parsed:
+                    return parsed
+    for key in keys:
+        parsed = parse_timestamp(data.get(key))
+        if parsed:
+            return parsed
+    evidence = data.get("visualEvidence")
+    if isinstance(evidence, dict):
+        for key in keys:
+            parsed = parse_timestamp(evidence.get(key))
+            if parsed:
+                return parsed
+    return None
 
 
 def is_verified(value: Any) -> bool:
@@ -103,6 +171,8 @@ def validate_manifest(path: Path, expect_diagrams: int | None = None) -> Tuple[b
     engineering_status = str(data.get("engineeringStatus", ""))
     visual_status = str(data.get("visualStatus", ""))
     source_status = str(data.get("sourcePreservationStatus", ""))
+    newest_png = newest_existing_png_mtime(records, base)
+    root_reviewed_at = visual_review_time(data)
 
     if expect_diagrams is not None and data.get("diagramCountExpected") not in (None, expect_diagrams):
         errors.append("diagramCountExpected does not match expected CLI value")
@@ -122,6 +192,9 @@ def validate_manifest(path: Path, expect_diagrams: int | None = None) -> Tuple[b
         png = resolve_file(base, str(file_value))
         if not png.exists() or png.stat().st_size <= 0:
             errors.append(f"diagram record {idx} PNG missing or empty: {png}")
+            png_mtime = None
+        else:
+            png_mtime = datetime.fromtimestamp(png.stat().st_mtime, timezone.utc)
         source = str(record.get("source", ""))
         consistency = str(record.get("consistency", ""))
         diagram_visual = str(record.get("visualStatus", ""))
@@ -138,6 +211,12 @@ def validate_manifest(path: Path, expect_diagrams: int | None = None) -> Tuple[b
             errors.append(f"diagram record {idx} missing engineeringStatus Verified for final Verified")
         if status == "Verified" and not is_verified(diagram_visual):
             errors.append(f"diagram record {idx} missing visualStatus Verified for final Verified")
+        if status == "Verified" and is_verified(diagram_visual):
+            reviewed_at = visual_review_time(data, record)
+            if reviewed_at is None:
+                errors.append(f"diagram record {idx} has visualStatus Verified but no visual review timestamp")
+            elif png_mtime and reviewed_at < png_mtime:
+                errors.append(f"diagram record {idx} visual review is older than PNG export")
 
     if fallback_used and native_verified:
         errors.append("fallbackUsed is true but nativeMdjVerified is true")
@@ -155,6 +234,10 @@ def validate_manifest(path: Path, expect_diagrams: int | None = None) -> Tuple[b
         errors.append("status Verified requires root sourcePreservationStatus Verified when present")
     if status == "Verified" and not records:
         errors.append("status Verified requires at least one diagram record")
+    if status == "Verified" and newest_png and root_reviewed_at and root_reviewed_at < newest_png:
+        errors.append("root visual review timestamp is older than latest exported PNG")
+    if status == "Verified" and newest_png and root_reviewed_at is None:
+        errors.append("status Verified requires root visual review timestamp newer than exported PNGs")
     for field_name, value in (
         ("engineeringStatus", engineering_status),
         ("visualStatus", visual_status),

@@ -62,6 +62,54 @@ def has_box(box: Any) -> bool:
     return keys.issubset(box.keys()) and all(isinstance(box.get(key), (int, float)) for key in keys)
 
 
+def name_of(item: Any) -> str:
+    return str(item.get("name") or item.get("title") or item.get("id") or "") if isinstance(item, dict) else ""
+
+
+def box_map(items: List[Any]) -> Dict[str, Dict[str, Any]]:
+    out: Dict[str, Dict[str, Any]] = {}
+    for item in items:
+        if isinstance(item, dict) and has_box(item):
+            name = name_of(item)
+            if name:
+                out[name] = item
+    return out
+
+
+def text_len(value: Any) -> int:
+    return len(str(value or ""))
+
+
+def edge_endpoint(edge: Any, key: str) -> str:
+    if not isinstance(edge, dict):
+        return ""
+    value = edge.get(key)
+    if isinstance(value, dict):
+        return name_of(value)
+    return str(value or "")
+
+
+def is_actor_like(name: str, zones: List[Any], bounds_by_name: Dict[str, Dict[str, Any]]) -> bool:
+    lowered = name.lower()
+    if "actor" in lowered or lowered in {"reader", "teacher", "admin", "user"}:
+        return True
+    if any(ch in name for ch in "读者教师管理员用户"):
+        return name in bounds_by_name and text_len(name) <= 4
+    actor_zones = [z for z in zones if isinstance(z, dict) and "actor" in str(z.get("name", "")).lower() and has_box(z)]
+    box = bounds_by_name.get(name)
+    if not box:
+        return False
+    cx = float(box["x"]) + float(box["width"]) / 2
+    cy = float(box["y"]) + float(box["height"]) / 2
+    for zone in actor_zones:
+        if (
+            float(zone["x"]) <= cx <= float(zone["x"]) + float(zone["width"])
+            and float(zone["y"]) <= cy <= float(zone["y"]) + float(zone["height"])
+        ):
+            return True
+    return False
+
+
 def add(findings: List[Dict[str, Any]], diagram: str, severity: str, code: str, message: str) -> None:
     findings.append({"diagram": diagram, "severity": severity, "code": code, "message": message})
 
@@ -86,6 +134,7 @@ def audit_diagram(item: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     bounds = as_list(item.get("elementBounds") or item.get("elements") or item.get("nodes"))
     bounded = [box for box in bounds if has_box(box)]
+    bounds_by_name = box_map(bounds)
     if not bounded:
         add(findings, title, "error", "missing-element-bounds", "Complex diagram layout requires element bounds.")
 
@@ -105,11 +154,87 @@ def audit_diagram(item: Dict[str, Any]) -> List[Dict[str, Any]]:
         names = " ".join(str(zone.get("name", "")).lower() for zone in zones if isinstance(zone, dict))
         if "actor" not in names or ("boundary" not in names and "system" not in names):
             add(findings, title, "error", "usecase-missing-actor-boundary-zones", "Use case layout requires actor and system-boundary zones.")
+        all_edges = primary_edges + as_list(item.get("secondaryEdges") or item.get("includes") or item.get("extends"))
+        actor_edges: Dict[str, int] = {}
+        for edge in all_edges:
+            source = edge_endpoint(edge, "from") or edge_endpoint(edge, "source")
+            target = edge_endpoint(edge, "to") or edge_endpoint(edge, "target")
+            for endpoint in (source, target):
+                if is_actor_like(endpoint, zones, bounds_by_name):
+                    actor_edges[endpoint] = actor_edges.get(endpoint, 0) + 1
+        max_actor_edges = int((item.get("thresholds") or {}).get("maxActorAssociations", 6))
+        for actor, count in actor_edges.items():
+            if count > max_actor_edges:
+                add(
+                    findings,
+                    title,
+                    "error",
+                    "usecase-too-many-actor-associations",
+                    f"Actor {actor} has {count} associations; introduce module entry use cases or split the diagram.",
+                )
+        if len(bounded) > 8 and len(zones) < 3:
+            add(findings, title, "error", "usecase-missing-module-zones", "Use case diagrams with more than 8 elements require visible module zones.")
 
     if dtype.lower() in {"class", "umlclassdiagram"}:
         names = " ".join(str(zone.get("name", "")).lower() for zone in zones if isinstance(zone, dict))
         if "role" not in names or "core" not in names:
             add(findings, title, "error", "class-missing-role-core-zones", "Class layout requires role/inheritance and core-domain zones.")
+        label_budget_dict = label_budget if isinstance(label_budget, dict) else {}
+        if label_budget_dict.get("preserveEnglishMembers") is not True:
+            add(findings, title, "warning", "class-source-preservation-not-recorded", "Class layout should record preserveEnglishMembers: true when source vocabulary exists.")
+
+    if dtype.lower() in {"state", "umlstatechartdiagram"}:
+        label_budget_dict = label_budget if isinstance(label_budget, dict) else {}
+        min_width = float(label_budget_dict.get("stateMinWidth") or 160)
+        char_px = float(label_budget_dict.get("stateCharPx") or 14)
+        for box in bounded:
+            required = max(min_width, text_len(name_of(box)) * char_px + 40)
+            if float(box.get("width", 0)) < required:
+                add(
+                    findings,
+                    title,
+                    "error",
+                    "state-box-too-narrow",
+                    f"State {name_of(box)} width {box.get('width')} is below required text budget {int(required)}.",
+                )
+        max_transition_chars = int(label_budget_dict.get("maxTransitionChars") or 12)
+        for edge in primary_edges + as_list(item.get("secondaryEdges") or item.get("transitions")):
+            label = edge.get("label") if isinstance(edge, dict) else None
+            if label is None and isinstance(edge, dict):
+                label = edge.get("name")
+            if label and text_len(label) > max_transition_chars:
+                add(findings, title, "warning", "state-transition-label-long", f"Transition label is longer than budget: {label}")
+
+    if dtype.lower() in {"sequence", "umlsequencediagram"}:
+        label_budget_dict = label_budget if isinstance(label_budget, dict) else {}
+        if not any(key in label_budget_dict for key in ("lifelineGap", "messageGap", "maxMessageChars")):
+            add(findings, title, "error", "sequence-missing-spacing-budget", "Sequence layouts require lifelineGap/messageGap label budgets.")
+        participant_bounds = bounded
+        if len(participant_bounds) >= 2:
+            centers = sorted(float(box["x"]) + float(box["width"]) / 2 for box in participant_bounds)
+            gaps = [b - a for a, b in zip(centers, centers[1:])]
+            min_gap = float(label_budget_dict.get("lifelineGap") or 220)
+            if gaps and min(gaps) < min_gap:
+                add(findings, title, "error", "sequence-lifeline-gap-too-small", f"Minimum lifeline gap {int(min(gaps))} is below required {int(min_gap)}.")
+        message_gap = float(label_budget_dict.get("messageGap") or 54)
+        y_values: List[float] = []
+        for message in primary_edges + as_list(item.get("secondaryEdges")):
+            if isinstance(message, dict):
+                if "y" in message and isinstance(message["y"], (int, float)):
+                    y_values.append(float(message["y"]))
+                points = message.get("points")
+                if isinstance(points, list) and points and isinstance(points[0], dict) and isinstance(points[0].get("y"), (int, float)):
+                    y_values.append(float(points[0]["y"]))
+        if len(y_values) >= 2:
+            gaps = [b - a for a, b in zip(sorted(y_values), sorted(y_values)[1:])]
+            if gaps and min(gaps) < message_gap:
+                add(findings, title, "error", "sequence-message-gap-too-small", f"Minimum message gap {int(min(gaps))} is below required {int(message_gap)}.")
+        else:
+            add(findings, title, "warning", "sequence-message-y-not-recorded", "Sequence message y positions are not recorded.")
+        for message in primary_edges + as_list(item.get("secondaryEdges")):
+            label = message.get("label") if isinstance(message, dict) else None
+            if label and not str(label).strip()[0].isdigit():
+                add(findings, title, "warning", "sequence-message-missing-number", f"Message lacks a visible sequence number: {label}")
 
     return findings
 

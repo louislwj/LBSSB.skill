@@ -36,6 +36,8 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - Actor must be complete, including glyph and label. A partial dot/head or off-canvas actor fails.
 - A role-specific use case diagram with more than 8 use cases must show module grouping or entry use cases.
 - A raw row/column grid of ovals fails unless it also has visible module zones and clean actor routing.
+- A single actor with more than 6 visible associations fails unless the diagram uses module entry use cases or the excess associations are justified in the manifest.
+- Actor-bus routing that creates long vertical or horizontal trunks through the system boundary fails when it crosses or visually crowds use case labels.
 
 ## Class Diagram Gates
 
@@ -110,3 +112,5 @@ Before final `Verified`, record one of these for each diagram:
 - `visualStatus: Failed: <reason>`
 
 If a diagram is only structurally present but visually poor, use `Engineering Verified` plus `Diagram Quality Unverified`.
+
+Review evidence must include when the PNG was inspected. If the PNG file is exported again after review, the review is stale and cannot support `Verified`.
