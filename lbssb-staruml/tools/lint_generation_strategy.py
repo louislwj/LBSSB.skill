@@ -66,7 +66,77 @@ def writes_mdj_directly(text: str) -> bool:
 def lint_file(path: Path, native_final: bool, source_preservation_required: bool) -> List[Dict[str, Any]]:
     text = read_text(path)
     lower = text.lower()
+    name_lower = path.name.lower()
     findings: List[Dict[str, Any]] = []
+    mutating_native_script = has_any(
+        lower,
+        [
+            "create_element",
+            "createelement",
+            "create_model",
+            "create diagram",
+            "creatediagram",
+            "create_diagram",
+            "create_view",
+            "createview",
+            "set_view_bounds",
+            "setviewbounds",
+            "set_edge_points",
+            "setedgepoints",
+            "update_element",
+            "updateelement",
+            "delete_element",
+            "deleteelement",
+            "generate_diagram",
+            "layout_diagram",
+            "save_project_as",
+        ],
+    )
+    complex_native_markers = has_any(
+        text,
+        [
+            "UMLUseCaseDiagram",
+            "UMLClassDiagram",
+            "UMLStatechartDiagram",
+            "UMLSequenceDiagram",
+            "UMLCommunicationDiagram",
+            "UMLActivityDiagram",
+            "UMLUseCase",
+            "UMLClass",
+            "UMLState",
+            "UMLLifeline",
+        ],
+    )
+    layout_plan_markers = has_any(
+        lower,
+        [
+            "layout-plan.json",
+            "layoutplan",
+            "elementbounds",
+            "set_view_bounds",
+            "setviewbounds",
+            "view bounds",
+            "bounds:",
+            "primaryedges",
+            "routepolicy",
+        ],
+    )
+    utility_script = any(
+        marker in name_lower
+        for marker in (
+            "preflight",
+            "export",
+            "reopen",
+            "verify",
+            "validate",
+            "render",
+            "normalize",
+            "flatten",
+            "status",
+            "manifest",
+        )
+    )
+    final_authoring_script = mutating_native_script and not utility_script
 
     if writes_mdj_directly(text):
         add(
@@ -104,6 +174,15 @@ def lint_file(path: Path, native_final: bool, source_preservation_required: bool
             "Global auto-layout is present without evidence of a local move/resize/reroute repair loop.",
         )
 
+    if native_final and final_authoring_script and complex_native_markers and not layout_plan_markers:
+        add(
+            findings,
+            path,
+            "error",
+            "missing-layout-plan",
+            "Complex native diagrams require a LayoutPlan or explicit bounds/routes before final generation.",
+        )
+
     class_rebuild = has_any(text, ["createClassDiagram", "UMLClass"]) and re.search(
         r'["\'].*[\u4e00-\u9fff].*:\s*(String|Integer|Decimal|Date|DateTime|Time|Boolean)',
         text,
@@ -133,6 +212,53 @@ def lint_file(path: Path, native_final: bool, source_preservation_required: bool
             "error" if native_final else "warning",
             "grid-usecase-layout",
             "Use case diagram uses row/column placement; final use case layout must use module zones and boundary planning.",
+        )
+
+    sequence_without_spacing = (
+        native_final
+        and final_authoring_script
+        and ("UMLSequenceDiagram" in text or "UMLLifeline" in text or "sequenceDiagram" in text)
+        and not has_any(lower, ["lifelinegap", "messagegap", "message y", "messagey", "set_view_bounds", "elementbounds"])
+    )
+    if sequence_without_spacing:
+        add(
+            findings,
+            path,
+            "error",
+            "sequence-without-spacing-plan",
+            "Final sequence diagrams require explicit lifeline spacing and message vertical positions.",
+        )
+
+    state_without_box_sizing = (
+        native_final
+        and final_authoring_script
+        and ("UMLStatechartDiagram" in text or "UMLState" in text or "stateDiagram" in text)
+        and not has_any(lower, ["state width", "statewidth", "labelbudget", "elementbounds", "set_view_bounds"])
+    )
+    if state_without_box_sizing:
+        add(
+            findings,
+            path,
+            "error",
+            "state-without-box-sizing",
+            "Final state diagrams require explicit state box sizing from label length.",
+        )
+
+    source_inventory_markers = has_any(lower, ["source-inventory", "sourceinventory", "preservedclasses", "preserve_existing"])
+    class_without_source_inventory = (
+        native_final
+        and final_authoring_script
+        and source_preservation_required
+        and ("UMLClassDiagram" in text or "UMLClass" in text or "createClassDiagram" in text)
+        and not source_inventory_markers
+    )
+    if class_without_source_inventory:
+        add(
+            findings,
+            path,
+            "error",
+            "class-without-source-inventory",
+            "Class diagram scripts must read or embed source inventory when source preservation is required.",
         )
 
     export_only_at_end = (

@@ -17,6 +17,32 @@ Do not think while drawing. Build project site and DiagramPlan first, then execu
 
 Do not confuse execution success with diagram quality. A project that opens, saves, and exports can still be visually unacceptable. Final `Verified` requires engineering verification and visual diagram verification.
 
+## Native Drawing Contract
+
+For native StarUML work, MCP is a drafting tool, not an auto-layout substitute. Before creating or repairing complex diagrams, build and record a real layout plan.
+
+Required before bulk native drawing:
+
+1. Read the source model vocabulary and preserve existing identifiers.
+2. Write `.lbssb/diagram-plan.json` for business semantics.
+3. Write `.lbssb/layout-plan.json` with canvas, zones, element bounds, primary edges, secondary edges, label budgets, and routing rules.
+4. Run script strategy lint before production drawing when generated scripts are used.
+5. Draw one pilot/high-risk native diagram.
+6. Export and visually inspect the pilot PNG.
+7. Continue bulk generation only after the pilot passes visual gates.
+
+If the pilot fails, stop batch generation and repair the pilot locally using move/resize/reroute actions. Do not continue creating the remaining diagrams just because MCP calls succeed.
+
+Human-like native drawing means:
+
+- place semantic zones/boundaries first;
+- place main nodes/classes/states/lifelines with final-ish sizes;
+- draw primary relationships/messages/flows first;
+- add secondary include/dependency/return/exception lines only after the main structure is readable;
+- export and repair locally before repeating the pattern.
+
+Global auto-layout, Mermaid import, and row/column grid placement may only be draft accelerators. They are not final layout strategies for use case, class, state, or sequence diagrams.
+
 ## Delivery Fail-Fast Contract
 
 - A StarUML `.mdj` delivery can be `Verified` only after StarUML and MCP preflight passes.
@@ -68,10 +94,12 @@ Before executing any route, verify these package files exist:
 - `tools/validate_manifest.py`
 - `tools/verify_deliverables.py`
 - `tools/lint_generation_strategy.py`
+- `tools/visual_geometry_audit.py`
 - `tool-specs/mcp-readme.spec.md`
 - `tool-specs/mcp-config-examples.spec.md`
 - `tool-specs/validate-staruml-mcp.spec.md`
 - `tool-specs/lint-generation-strategy.spec.md`
+- `tool-specs/visual-geometry-audit.spec.md`
 
 If any required file is missing, mark `Skill Package Unverified: <missing files>` and do not pretend the full Skill workflow is available. Only report the missing package files and ask for repair or repair the Skill package if authorized.
 
@@ -116,6 +144,7 @@ Single-diagram tasks must not enter the full training-project flow. Full project
 - Known bad delivery patterns and forbidden claims: read `failure-patterns.md`.
 - Final deliverable verification: use `tools/verify_deliverables.py` and `tools/validate_manifest.py`.
 - Script generation strategy lint: use `tools/lint_generation_strategy.py` before accepting generated native authoring scripts.
+- Optional geometry/layout evidence: use `tools/visual_geometry_audit.py` when `.lbssb/layout-plan.json` exists or when native diagram quality is disputed.
 - Token budget control: read `token-control.md`.
 - Chinese paths, Chinese filenames, Markdown/JSON/.mdj encoding, PowerShell/Node/Python encoding handling: read `encoding-policy.md`.
 
@@ -154,6 +183,7 @@ If the lint report has `status: Failed`, do not continue to bulk native generati
 - direct `.mdj` JSON/ZIP synthesis;
 - Mermaid `generate_diagram` used as final sequence/state output;
 - global `layout_diagram` with no local move/resize/reroute repair loop;
+- missing `.lbssb/layout-plan.json` or no concrete bounds/routes for complex diagrams;
 - row/column use-case placement without module zones;
 - class diagram hard-coded translated members while source identifiers must be preserved;
 - batch-create-all-then-export with no pilot visual gate.

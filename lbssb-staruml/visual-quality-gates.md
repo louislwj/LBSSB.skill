@@ -19,6 +19,8 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - Diagrams use stable zones, lanes, columns, or layers instead of an unstructured grid.
 - Imported Mermaid diagrams are treated as drafts until exported PNGs are inspected and repaired.
 - Global auto-layout is allowed only for first drafts. Final repair must use local movement, resizing, and edge routing.
+- A diagram with a black/transparent export must be normalized to a white background before visual judgment.
+- Visual review must name concrete defects. "Looks good" without checking clipping, line-over-text, hierarchy, and label fit is not enough for `Verified`.
 
 ## Use Case Diagram Gates
 
@@ -31,6 +33,9 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - Actor glyph and actor label must be fully visible; a cropped actor head or off-canvas actor fails the gate.
 - Use case labels must not be crossed by actor association lines.
 - Maximum obvious actor-line crossings: `3` for a single actor diagram, `7` for an overall diagram.
+- Actor must be complete, including glyph and label. A partial dot/head or off-canvas actor fails.
+- A role-specific use case diagram with more than 8 use cases must show module grouping or entry use cases.
+- A raw row/column grid of ovals fails unless it also has visible module zones and clean actor routing.
 
 ## Class Diagram Gates
 
@@ -44,6 +49,10 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - If the source model used English identifiers, class names and members remain English or bilingual by explicit plan; silently replacing them with Chinese-only members fails source-preservation review.
 - Class boxes must be sized after restoring source members, not before.
 - Relationship labels and multiplicities must be adjusted after final class resize.
+- Source English class names, attributes, operations, and types must not decrease unless explicitly documented as intentional.
+- Role inheritance must be visually separate from aggregates and workflow objects.
+- Core domain entities must be identifiable within 3 seconds without tracing dependencies.
+- Non-essential View/UI dependency lines that cross the domain trunk fail the gate unless the task specifically requires them.
 
 ## State Diagram Gates
 
@@ -54,6 +63,9 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - State nodes must not use default small boxes when Chinese labels exceed available width.
 - No transition label may sit inside another state box.
 - Maximum transition label overlap: `0`.
+- State box width must be calculated from the longest visible state label before routing transitions.
+- Transition labels longer than 12 Chinese characters or 24 ASCII characters must be shortened, wrapped, or moved to notes.
+- A lifecycle state diagram must have one dominant reading direction. A tangled central knot fails even if all states exist.
 
 ## Sequence Diagram Gates
 
@@ -66,6 +78,10 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - A sequence diagram with message labels floating far from visible arrows fails the gate.
 - Branch labels must be placed inside or adjacent to the fragment they describe, not as isolated text.
 - Lifeline spacing must leave enough horizontal room for the longest message between adjacent participants.
+- Message text without a visible arrow connected to lifelines fails.
+- Lifelines must remain vertical and visually connected below participant headers.
+- `alt/else/loop` fragments must enclose their related messages; detached frame labels fail.
+- If the sequence came from Mermaid import, require a native repair pass with lifeline spacing and fragment bounds before `Verified`.
 
 ## Activity Diagram Gates
 
@@ -74,6 +90,16 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - Branches rejoin through explicit merge/join points.
 - Action nodes reserve enough width for Chinese text.
 - Loops do not cross action labels.
+- Swimlanes must be used when the process changes responsibility between actor/system/service.
+- Guard labels must stay near outgoing decision edges.
+
+## Communication Diagram Gates
+
+- Objects are placed with enough whitespace for numbered messages.
+- Every message label has a visible sequence number.
+- Message numbers follow a readable order around the collaboration path.
+- Lines do not cover object names.
+- Secondary/return lines do not hide the main collaboration path.
 
 ## Review Evidence
 

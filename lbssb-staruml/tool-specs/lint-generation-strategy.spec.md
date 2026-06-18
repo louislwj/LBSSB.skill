@@ -25,10 +25,19 @@ python lbssb-staruml/tools/lint_generation_strategy.py --native-final tools/lbss
 - Direct `.mdj` or `project.json` synthesis instead of StarUML MCP/API authoring.
 - Mermaid `generate_diagram` accepted as final sequence/state output.
 - Global `layout_diagram` without local move/resize/reroute repair evidence.
+- Complex native diagrams generated without a LayoutPlan or explicit bounds/routes.
 - Complex use case diagrams positioned by raw row/column grid.
 - Hard-coded translated class members when source identifiers must be preserved.
+- Final sequence diagrams without explicit lifeline/message spacing.
+- Final state diagrams without state box sizing from label length.
+- Final class diagrams without source inventory when source preservation is required.
 - Batch-create-all-then-export workflow with no pilot visual gate.
 - Verified status claims without split engineering/visual/source-preservation fields.
+
+Utility distinction:
+
+- Export, preflight, reopen, validate, render, normalize, status, and manifest scripts are utility scripts. Layout-plan hard gates apply to scripts that create or mutate native model/diagram/view objects, not to pure export/preflight tools.
+- Utility scripts can still fail if they directly synthesize `.mdj`, claim false `Verified`, or otherwise contradict native delivery evidence.
 
 ## Outputs
 

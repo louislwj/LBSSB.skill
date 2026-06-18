@@ -30,6 +30,31 @@
 - 让新会话继续同一个 UML 项目。
 - 接受一个项目目录作为输入，先读取其中 `.mdj`、指导书、截图、`.lbssb/` 和 `tools/lbssb/`，再判断是继续修复还是新建。
 
+## Project Directory Input 项目目录输入
+
+本 Skill 支持直接接受一个项目目录。Agent 必须先扫描目录中的 `.mdj`、`.docx`、截图、`.lbssb/`、`tools/lbssb/` 和已有导出 PNG，再决定继续修复还是新建。
+
+如果目录里已有 `.lbssb/next-action.md`、`diagram-manifest.json` 或 `visual-review.json`，这些文件优先作为断点和质量状态依据。不能忽略旧状态重新声称完成。
+
+## Native Drawing Discipline 原生画图纪律
+
+StarUML MCP 是画笔，不是审美引擎。复杂图不能用“批量铺节点 + 全局布局 + 导出”作为最终路径。
+
+原生 StarUML 交付必须先生成或读取：
+
+- `.lbssb/diagram-plan.json`：业务语义。
+- `.lbssb/layout-plan.json`：画布、分区、元素 bounds、主线、次线、文字预算和路由策略。
+
+然后先画一张高风险 pilot 图，导出 PNG 并复核。pilot 没通过时，必须局部移动、缩放、折线路由或修改布局计划，不能继续批量生成剩余图。
+
+常见失败会被拦截：
+
+- 用例图按 row/column 网格铺椭圆，没有系统边界和模块区。
+- 类图丢失源 `.mdj` 中的英文类名、属性、方法或类型。
+- 状态图没有按最长文字预留状态框宽度。
+- 顺序图只有消息文字，缺少清晰 lifeline、箭头和分支片段。
+- Mermaid/import 或 StarUML 全局 auto-layout 被当成最终质量。
+
 ## How To Invoke 调用方式
 
 调用方式不固定，不需要照抄某一整段模板。只要满足这三个条件即可：
@@ -100,13 +125,21 @@ project-site.md
 class-diagram-rules.md
 diagram-patterns.md
 quality-gates.md
+visual-quality-gates.md
+source-preservation.md
+layout-playbooks.md
+native-repair-workflow.md
 scripts-spec.md
 token-control.md
 encoding-policy.md
 failure-patterns.md
+tools/lint_generation_strategy.py
+tools/visual_geometry_audit.py
 tool-specs/mcp-readme.spec.md
 tool-specs/mcp-config-examples.spec.md
 tool-specs/validate-staruml-mcp.spec.md
+tool-specs/lint-generation-strategy.spec.md
+tool-specs/visual-geometry-audit.spec.md
 ```
 
 如果缺失，状态为 `Skill Package Unverified`，不会伪装成完整执行。

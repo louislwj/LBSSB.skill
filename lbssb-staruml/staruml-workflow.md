@@ -75,6 +75,8 @@ Rerun preflight after any environment change, including:
    - Output: `.lbssb/diagram-plan.json`, `.lbssb/layout-plan.json`, layout zones/lanes/anchors, source-preservation rules.
    - Success: high-risk diagrams and pilot diagram are identified.
    - Required fields: every diagram records `type`, `title`, `businessGoal`, source evidence, main elements, main relations/messages/flows, layout zones, and risk level.
+   - LayoutPlan fields: every complex diagram records `canvas`, `zones`, `elementBounds`, `primaryEdges`, `secondaryEdges`, `labelBudget`, and `routePolicy`.
+   - Blocking rule: for use case, class, state, sequence, communication, and activity diagrams, a missing or generic LayoutPlan means native drawing is not ready.
    - Script gate: if generating `tools/lbssb/` native authoring scripts, run `tools/lint_generation_strategy.py --native-final` before production drawing.
    - Source gate: if a source `.mdj` exists, run the lint with `--source-preservation-required`.
 
@@ -84,6 +86,7 @@ Rerun preflight after any environment change, including:
    - Output: one native StarUML diagram.
    - Success: diagram exists, exports PNG, and passes visual review.
    - Constraint: do not batch-generate all diagrams before seeing a real exported PNG.
+   - Constraint: pilot creation must use the planned bounds/routes; row/column scatter, Mermaid import, or global auto-layout alone cannot satisfy the pilot.
    - Failure action: if the pilot export is visually poor, repair the pilot locally or change the layout plan before generating more diagrams.
    - Blocking rule: if the pilot fails visual review, stop batch generation. The next action is local repair, not continuing to the remaining diagrams.
 
@@ -109,7 +112,7 @@ Rerun preflight after any environment change, including:
 
 13. Visual review and native repair.
     - Input: exported PNGs.
-    - Tool: visual inspection plus MCP/API movement, resizing, edge routing.
+    - Tool: visual inspection plus MCP/API movement, resizing, edge routing; optional `tools/visual_geometry_audit.py` for layout-plan evidence.
     - Output: repaired native diagrams and updated PNGs.
     - Success: every required diagram passes `visual-quality-gates.md`.
     - Failure: mark `Unverified: diagram quality gate failed`.
@@ -178,6 +181,24 @@ High-risk diagram defaults:
 - Class: preserve source identifiers first; place role inheritance, core domain, aggregates, support classes, then relationships.
 - State: size state boxes from the longest label; shorten transition text before drawing lines.
 - Sequence: create lifelines in stable participant order, then messages in time bands; branch fragments need visible space before export.
+
+Required layout artifacts for complex diagrams:
+
+```json
+{
+  "diagram": "",
+  "type": "",
+  "canvas": { "width": 1600, "height": 1100 },
+  "zones": [{ "name": "", "x": 0, "y": 0, "width": 0, "height": 0 }],
+  "elementBounds": [{ "name": "", "x": 0, "y": 0, "width": 0, "height": 0 }],
+  "primaryEdges": [{ "from": "", "to": "", "route": "orthogonal | direct | curved", "points": [] }],
+  "secondaryEdges": [{ "from": "", "to": "", "route": "edge | local | hidden-if-noisy" }],
+  "labelBudget": { "maxTransitionChars": 12, "wrapLongLabels": true },
+  "routePolicy": "primary lines stay inside zones; secondary dependencies route around edges"
+}
+```
+
+If a generated native script does not read or embed equivalent bounds/routes for complex diagrams, treat it as a draft generator only.
 
 ## PlantUML Fallback
 

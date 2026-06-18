@@ -33,6 +33,7 @@ Scripts are internal Skill tool caches, not prerequisites the user must understa
 | `inspect_class_associations.mjs` | Inspect class relations, multiplicities, and crossings hints | project or diagram ID | console/JSON report | diagram name/ID |
 | `build_diagram_plan.py` or `.mjs` | Convert requirements and source inventory into diagram/layout plan | guide text, source inventory | `diagram-plan.json`, `layout-plan.json` | project name, output dir |
 | `visual_quality_check.py` | Record page/image-level visual review results | exported PNG dir, expected diagrams | visual review JSON | min sizes, manual notes |
+| `visual_geometry_audit.py` | Check layout-plan/native-view geometry evidence before `Verified` | `.lbssb/layout-plan.json`, optional inventory/export index | JSON audit report | expected diagrams, min sizes |
 | `tools/start_project_staruml.ps1` | Resolve and start project/system StarUML safely | project root, optional runtime config | JSON startup result | ports, wait seconds |
 | `tools/check_staruml_preflight.py` | Hard preflight and capability level report | project root, optional evidence | `.lbssb/preflight-report.json` | evidence file, MCP tools JSON |
 | `tools/check_staruml_preflight.ps1` | Windows wrapper for Python preflight | same as Python script | `.lbssb/preflight-report.json` | Python executable |
@@ -109,12 +110,18 @@ Reject or mark `visualStatus: Unverified` when a native generation script:
 - rebuilds class members from hard-coded Chinese data when a source `.mdj` has existing English identifiers;
 - imports Mermaid sequence/state diagrams and accepts them as final without native visual repair;
 - exports PNGs but records no visual review evidence.
+- generates complex native diagrams without reading or embedding `.lbssb/layout-plan.json` or equivalent bounds/routes;
+- creates use case, class, state, or sequence diagrams without explicit view bounds;
+- creates sequence diagrams without explicit lifeline spacing and message y positions;
+- creates state diagrams without explicit state box sizing;
+- creates class diagrams without restoring source inventory before sizing class boxes.
 
 For final native `.mdj` delivery, treat these as hard failures before production drawing:
 
 - direct `.mdj` JSON/ZIP synthesis;
 - Mermaid import accepted as final sequence/state output;
 - global `layout_diagram` without local repair evidence;
+- missing concrete LayoutPlan/bounds/routes for complex diagrams;
 - grid-based complex use case layout;
 - hard-coded translated class members when source preservation is required;
 - batch creation of all diagrams before pilot export/review.

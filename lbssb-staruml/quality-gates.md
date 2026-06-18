@@ -38,6 +38,8 @@ Use this gate whenever the task promises editable StarUML output.
 - Native objects were created through StarUML MCP/API, not direct `.mdj` JSON synthesis.
 - Generated native authoring scripts passed `tools/lint_generation_strategy.py --native-final`.
 - If a source `.mdj` or existing class vocabulary exists, script lint also passed with `--source-preservation-required`.
+- Complex native diagrams have a concrete `.lbssb/layout-plan.json` or equivalent recorded bounds/routes.
+- If `.lbssb/layout-plan.json` is used as evidence, `tools/visual_geometry_audit.py` has no hard errors.
 - `.lbssb/verification-report.json` exists.
 - `tools/verify_deliverables.py` exited `0`.
 - `visual-quality-gates.md` passed for every required PNG.
@@ -108,7 +110,10 @@ Common fail conditions:
 - class diagrams rebuild source English members as translated hard-coded members;
 - Mermaid imports are accepted as final sequence/state diagrams;
 - global auto-layout is used without recorded local repair;
+- complex diagrams are generated without concrete LayoutPlan/bounds/routes;
 - use case diagrams use raw grid placement without module zones;
+- state diagrams are generated without explicit state-box sizing;
+- sequence diagrams are generated without lifeline/message spacing;
 - scripts batch-create all diagrams and only export at the end;
 - direct `.mdj` file synthesis is used instead of StarUML MCP/API object creation.
 
