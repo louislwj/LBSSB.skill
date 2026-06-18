@@ -75,6 +75,8 @@ Rerun preflight after any environment change, including:
    - Output: `.lbssb/diagram-plan.json`, `.lbssb/layout-plan.json`, layout zones/lanes/anchors, source-preservation rules.
    - Success: high-risk diagrams and pilot diagram are identified.
    - Required fields: every diagram records `type`, `title`, `businessGoal`, source evidence, main elements, main relations/messages/flows, layout zones, and risk level.
+   - Script gate: if generating `tools/lbssb/` native authoring scripts, run `tools/lint_generation_strategy.py --native-final` before production drawing.
+   - Source gate: if a source `.mdj` exists, run the lint with `--source-preservation-required`.
 
 9. Draw pilot/high-risk diagram first.
    - Input: DiagramPlan and LayoutPlan.
@@ -83,6 +85,7 @@ Rerun preflight after any environment change, including:
    - Success: diagram exists, exports PNG, and passes visual review.
    - Constraint: do not batch-generate all diagrams before seeing a real exported PNG.
    - Failure action: if the pilot export is visually poor, repair the pilot locally or change the layout plan before generating more diagrams.
+   - Blocking rule: if the pilot fails visual review, stop batch generation. The next action is local repair, not continuing to the remaining diagrams.
 
 10. Generate or repair remaining diagrams.
    - Input: proven DiagramPlan/LayoutPlan.
@@ -90,6 +93,7 @@ Rerun preflight after any environment change, including:
    - Output: native StarUML diagrams.
    - Success: diagrams exist, are editable, contain real views/relationships, and preserve required source vocabulary.
    - Constraint: Model, Diagram, View, and Relationship objects must be created or updated through StarUML MCP/API, not by direct JSON authoring.
+   - Constraint: complex use case, class, state, and sequence diagrams must use zone/lane/participant plans. Mermaid import or global auto-layout may be used only as a draft if a native repair pass follows before acceptance.
 
 11. Save working copy.
    - Input: current StarUML project.
@@ -153,6 +157,7 @@ Rerun preflight after any environment change, including:
 - Rebuilding class diagrams from scratch when a source `.mdj` contains user-defined class names, English attributes, or operations.
 - Calling Mermaid import, global `layout_diagram`, or row/column grid placement the final layout strategy for complex diagrams.
 - Writing `finalStatus: Verified` or `status: Verified` before root and per-diagram visual/source-preservation status fields are present.
+- Running native authoring scripts that fail `tools/lint_generation_strategy.py --native-final` and continuing as if the strategy were acceptable.
 
 ## Native Drawing Discipline
 
@@ -166,6 +171,13 @@ Use MCP like a human drafter, not a bulk scatter tool:
 6. Add secondary include/dependency/return/exception lines only after the main flow is readable.
 
 Do not create all nodes and all lines in one dense pass unless the script already has a proven layout plan for that diagram type.
+
+High-risk diagram defaults:
+
+- Use case: draw system boundary and module zones before actor links; actor links connect to module entry use cases, not every secondary use case.
+- Class: preserve source identifiers first; place role inheritance, core domain, aggregates, support classes, then relationships.
+- State: size state boxes from the longest label; shorten transition text before drawing lines.
+- Sequence: create lifelines in stable participant order, then messages in time bands; branch fragments need visible space before export.
 
 ## PlantUML Fallback
 

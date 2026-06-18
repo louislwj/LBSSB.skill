@@ -86,6 +86,23 @@ If the `.mdj` opens and exports but the diagrams are tangled, clipped, or unrevi
 Unverified: diagram quality gate failed
 ```
 
+## Generation Strategy Lint
+
+Native authoring scripts should be scanned before they are trusted for final StarUML delivery:
+
+```powershell
+python lbssb-staruml/tools/lint_generation_strategy.py --native-final --source-preservation-required tools/lbssb
+```
+
+Expected failure examples:
+
+- script writes `.mdj` or `project.json` directly;
+- script imports Mermaid sequence/state diagrams and treats them as final;
+- script calls global `layout_diagram` without local repair evidence;
+- script uses row/column use case placement for complex diagrams;
+- script hard-codes translated class members while source vocabulary must be preserved;
+- script batch-creates all diagrams before a pilot export/review.
+
 ## Legitimate PlantUML Fallback Example
 
 PlantUML fallback can pass its own file checks but remains native-StarUML `Unverified`.

@@ -203,12 +203,21 @@ manifest 单独校验：
 python lbssb-staruml/tools/validate_manifest.py --manifest .lbssb/diagram-manifest.json
 ```
 
+生成脚本策略检查：
+
+```powershell
+python lbssb-staruml/tools/lint_generation_strategy.py --native-final --source-preservation-required tools/lbssb
+```
+
+如果项目没有源 `.mdj` 或旧类词汇，可去掉 `--source-preservation-required`。该检查会拦截把 Mermaid 导入、全局 auto-layout、网格用例图、硬编码中文类成员或直接拼 `.mdj` 当作最终 native 交付的脚本。
+
 `Verified` 必须同时满足：
 
 - capability level 是 `L4`；
 - `.lbssb/preflight-report.json` 中 `status` 是 `Verified`；
 - `.lbssb/verification-report.json` 存在；
 - `verify_deliverables.py` exit code 是 `0`。
+- native 生成脚本没有被 `lint_generation_strategy.py` 判定为失败。
 
 低于 `L4` 时只能 `Unverified` 或 fallback。`L0/L1/L2` 只能只读分析或 PlantUML fallback；`L3` 可以尝试 native edit，但必须说明导出/验收未完成。
 
@@ -302,10 +311,11 @@ QualityGate 失败时不得声称完成。
 4. 让 Skill 创建或读取 `.lbssb/`。
 5. 先读取图清单、业务对象和已有类/属性/操作。
 6. 生成 DiagramPlan 和 LayoutPlan。
-7. 先绘制或修复一张高风险图，导出 PNG 并复核；不允许未看首张图就批量扫完并声称完成。
-8. 复核通过后再批量生成或修复剩余图。
-9. 用 MCP 对原生 `.mdj` 做局部移动、缩放、改线，不用全局 auto-layout 充当最终修复。
-10. 导出 PNG，运行工程验收和视觉验收，并更新 `.lbssb/next-action.md`。
+7. 如果生成脚本，先跑 `lint_generation_strategy.py`，失败就先修脚本策略。
+8. 先绘制或修复一张高风险图，导出 PNG 并复核；不允许未看首张图就批量扫完并声称完成。
+9. 复核通过后再批量生成或修复剩余图。
+10. 用 MCP 对原生 `.mdj` 做局部移动、缩放、改线，不用全局 auto-layout 或 Mermaid 导入充当最终修复。
+11. 导出 PNG，运行工程验收和视觉验收，并更新 `.lbssb/next-action.md`。
 
 ## Verified Means More Than Exported
 

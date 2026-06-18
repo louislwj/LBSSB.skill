@@ -36,6 +36,8 @@ Use this gate whenever the task promises editable StarUML output.
 - Manifest records validation result for each diagram.
 - Manifest records engineering status, visual status, and source-preservation status where applicable.
 - Native objects were created through StarUML MCP/API, not direct `.mdj` JSON synthesis.
+- Generated native authoring scripts passed `tools/lint_generation_strategy.py --native-final`.
+- If a source `.mdj` or existing class vocabulary exists, script lint also passed with `--source-preservation-required`.
 - `.lbssb/verification-report.json` exists.
 - `tools/verify_deliverables.py` exited `0`.
 - `visual-quality-gates.md` passed for every required PNG.
@@ -82,6 +84,33 @@ If existing English identifiers or source classes were replaced without authoriz
 ```text
 Unverified: source preservation failed
 ```
+
+## Generation Strategy Gate
+
+Generated scripts are part of the deliverable evidence when they create or repair native StarUML diagrams.
+
+Required command for native final delivery:
+
+```powershell
+python lbssb-staruml/tools/lint_generation_strategy.py --native-final tools/lbssb
+```
+
+Use this stricter command when a source `.mdj`, source inventory, or previous English class vocabulary exists:
+
+```powershell
+python lbssb-staruml/tools/lint_generation_strategy.py --native-final --source-preservation-required tools/lbssb
+```
+
+If the lint status is `Failed`, the delivery cannot be `Verified` until the script strategy is repaired or replaced. Do not bypass this by manually editing manifest status.
+
+Common fail conditions:
+
+- class diagrams rebuild source English members as translated hard-coded members;
+- Mermaid imports are accepted as final sequence/state diagrams;
+- global auto-layout is used without recorded local repair;
+- use case diagrams use raw grid placement without module zones;
+- scripts batch-create all diagrams and only export at the end;
+- direct `.mdj` file synthesis is used instead of StarUML MCP/API object creation.
 
 ## PlantUML Fallback Gate
 

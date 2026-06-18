@@ -38,6 +38,7 @@ Scripts are internal Skill tool caches, not prerequisites the user must understa
 | `tools/check_staruml_preflight.ps1` | Windows wrapper for Python preflight | same as Python script | `.lbssb/preflight-report.json` | Python executable |
 | `tools/validate_manifest.py` | Manifest schema and consistency checks | manifest path | console JSON | expected diagram count |
 | `tools/verify_deliverables.py` | Final hard deliverable verification | manifest, preflight, mdj | `.lbssb/verification-report.json` | expected diagram count |
+| `tools/lint_generation_strategy.py` | Reject unsafe native generation strategies before drawing | script files or `tools/lbssb/` | console JSON, optional report | `--native-final`, `--source-preservation-required` |
 
 ## PlantUML Fallback Scripts
 
@@ -108,6 +109,23 @@ Reject or mark `visualStatus: Unverified` when a native generation script:
 - rebuilds class members from hard-coded Chinese data when a source `.mdj` has existing English identifiers;
 - imports Mermaid sequence/state diagrams and accepts them as final without native visual repair;
 - exports PNGs but records no visual review evidence.
+
+For final native `.mdj` delivery, treat these as hard failures before production drawing:
+
+- direct `.mdj` JSON/ZIP synthesis;
+- Mermaid import accepted as final sequence/state output;
+- global `layout_diagram` without local repair evidence;
+- grid-based complex use case layout;
+- hard-coded translated class members when source preservation is required;
+- batch creation of all diagrams before pilot export/review.
+
+Run:
+
+```powershell
+python lbssb-staruml/tools/lint_generation_strategy.py --native-final --source-preservation-required tools/lbssb
+```
+
+If there is no source `.mdj` or previous class vocabulary, omit `--source-preservation-required` but still run `--native-final` for editable StarUML delivery.
 
 Allowed pattern:
 

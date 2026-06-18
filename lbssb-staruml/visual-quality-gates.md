@@ -27,6 +27,9 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - Shared included use cases are placed close to their base use cases.
 - Optional/conditional use cases use `extend` and are placed near the extension point.
 - System boundary is present when a diagram has more than one actor or more than one functional cluster.
+- Single-actor diagrams still need module grouping when they contain more than 8 use cases.
+- Actor glyph and actor label must be fully visible; a cropped actor head or off-canvas actor fails the gate.
+- Use case labels must not be crossed by actor association lines.
 - Maximum obvious actor-line crossings: `3` for a single actor diagram, `7` for an overall diagram.
 
 ## Class Diagram Gates
@@ -38,6 +41,9 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - Support classes, controllers, services, repositories, gateways, and adapters stay at the edges.
 - Multiplicity labels are readable and do not sit on class borders or arrowheads.
 - Global auto-layout must not be run after manual semantic grouping unless a follow-up repair pass restores groups.
+- If the source model used English identifiers, class names and members remain English or bilingual by explicit plan; silently replacing them with Chinese-only members fails source-preservation review.
+- Class boxes must be sized after restoring source members, not before.
+- Relationship labels and multiplicities must be adjusted after final class resize.
 
 ## State Diagram Gates
 
@@ -45,6 +51,8 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - Transition labels are short event/guard labels. Long business explanations belong in notes or documentation.
 - A lifecycle diagram reads primarily left-to-right or top-to-bottom, not as a tangled graph.
 - Initial and final pseudostates do not overlap with transition labels.
+- State nodes must not use default small boxes when Chinese labels exceed available width.
+- No transition label may sit inside another state box.
 - Maximum transition label overlap: `0`.
 
 ## Sequence Diagram Gates
@@ -55,6 +63,9 @@ Editable StarUML delivery may be final `Verified` only when both statuses pass.
 - Branches use visible `alt/else` or equivalent fragments with guard labels.
 - Return messages are visually distinct from calls.
 - Imported Mermaid sequence diagrams are drafts unless activation bars, fragments, and message spacing are visually checked.
+- A sequence diagram with message labels floating far from visible arrows fails the gate.
+- Branch labels must be placed inside or adjacent to the fragment they describe, not as isolated text.
+- Lifeline spacing must leave enough horizontal room for the longest message between adjacent participants.
 
 ## Activity Diagram Gates
 

@@ -67,9 +67,11 @@ Before executing any route, verify these package files exist:
 - `tools/check_staruml_preflight.py`
 - `tools/validate_manifest.py`
 - `tools/verify_deliverables.py`
+- `tools/lint_generation_strategy.py`
 - `tool-specs/mcp-readme.spec.md`
 - `tool-specs/mcp-config-examples.spec.md`
 - `tool-specs/validate-staruml-mcp.spec.md`
+- `tool-specs/lint-generation-strategy.spec.md`
 
 If any required file is missing, mark `Skill Package Unverified: <missing files>` and do not pretend the full Skill workflow is available. Only report the missing package files and ask for repair or repair the Skill package if authorized.
 
@@ -113,6 +115,7 @@ Single-diagram tasks must not enter the full training-project flow. Full project
 - Script generation/reuse: read `scripts-spec.md`.
 - Known bad delivery patterns and forbidden claims: read `failure-patterns.md`.
 - Final deliverable verification: use `tools/verify_deliverables.py` and `tools/validate_manifest.py`.
+- Script generation strategy lint: use `tools/lint_generation_strategy.py` before accepting generated native authoring scripts.
 - Token budget control: read `token-control.md`.
 - Chinese paths, Chinese filenames, Markdown/JSON/.mdj encoding, PowerShell/Node/Python encoding handling: read `encoding-policy.md`.
 
@@ -135,6 +138,25 @@ A. StarUML `.mdj` track: project opens, diagrams exist, diagrams remain editable
 B. PNG delivery track: white background, dark lines, readable text, no clipped key elements, and diagram-specific visual gates pass.
 
 C. Manifest track: each PNG records whether it came from `staruml-export`, `draw_from_plan`, or `normalized`, whether consistency is `native`, `semantic-consistent`, or `unverified`, and visual status for the native exported diagram.
+
+## Native Authoring Strategy Gate
+
+Before running or accepting a generated native StarUML authoring script, scan it:
+
+```powershell
+python lbssb-staruml/tools/lint_generation_strategy.py --native-final --source-preservation-required tools/lbssb
+```
+
+Use `--source-preservation-required` whenever a source `.mdj` or previous class vocabulary exists.
+
+If the lint report has `status: Failed`, do not continue to bulk native generation and do not claim `Verified`. Repair the strategy first. Common hard failures:
+
+- direct `.mdj` JSON/ZIP synthesis;
+- Mermaid `generate_diagram` used as final sequence/state output;
+- global `layout_diagram` with no local move/resize/reroute repair loop;
+- row/column use-case placement without module zones;
+- class diagram hard-coded translated members while source identifiers must be preserved;
+- batch-create-all-then-export with no pilot visual gate.
 
 ## Verification Split
 
